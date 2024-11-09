@@ -13,7 +13,7 @@ class DotthzMetaData:
     institution: str = ""
     description: str = ""
     md: Dict[str, str] = field(default_factory=dict)
-    version: str = ""
+    version: str = "1.00"
     mode: str = ""
     instrument: str = ""
     time: str = ""
