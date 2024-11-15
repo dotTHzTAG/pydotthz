@@ -19,6 +19,9 @@ class DotthzMetaData:
     time: str = ""
     date: str = ""
 
+    def add_field(self, key, value):
+        self.md[key] = value
+
 
 @dataclass
 class DotthzMeasurement:
