@@ -51,3 +51,4 @@ if __name__ == "__main__":
     print(file.groups.get(key).datasets)
 
 ```
+Requires hdf5 to be installed.
