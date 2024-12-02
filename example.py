@@ -29,14 +29,17 @@ if __name__ == "__main__":
     file.groups["Measurement"] = measurement
 
     # save the file
-    file.save(Path("test.thz"))
+    path1 = Path("test1.thz")
+    path2 = Path("test2.thz")
+    file.save(path1)
+    file.save(path2)
     del file
 
     # open the file again
-    file = DotthzFile.from_file("test.thz")
+    file = DotthzFile.from_file(path1)
 
     # add more measurements from a file
-    file.add_from_file("test2.thz")
+    file.add_from_file(path2)
 
     # read the first group (measurement)
     key = list(file.groups.keys())[0]
