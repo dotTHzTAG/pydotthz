@@ -43,7 +43,15 @@ class DotthzFile:
         return cls(groups={"Measurement 1": measurement})
 
     @classmethod
-    def load(cls, path: Path):
+    def load(cls, path):
+        file_groups = cls._load(None, path)
+        return cls(groups=file_groups)
+
+    def add_from_file(self, path):
+        file_groups = self._load(path)
+        self.groups.update(file_groups)
+
+    def _load(self, path: Path):
         file = h5py.File(str(path), 'r')
         groups = {}
 
@@ -60,7 +68,7 @@ class DotthzFile:
                 else:
                     ds_description_str = ds_description_attr  # Already a string
 
-                ds_descriptions = ds_description_str.split(", ") if isinstance(ds_description_str, str) else []
+                ds_descriptions = [ds.strip() for ds in ds_description_str.split(",")] if isinstance(ds_description_str, str) else []
                 for i, desc in enumerate(ds_descriptions):
                     dataset_name = f"ds{i + 1}"
                     if dataset_name in group:
@@ -98,7 +106,7 @@ class DotthzFile:
                     md_description_str = md_description_attr  # Already a string
 
                 # Now apply split if it’s a string
-                md_descriptions = md_description_str.split(", ") if isinstance(md_description_str, str) else []
+                md_descriptions = [md.strip() for md in md_description_str.split(",")] if isinstance(md_description_str, str) else []
 
                 # Iterate over the split descriptions to populate metadata
                 for i, desc in enumerate(md_descriptions):
@@ -107,7 +115,7 @@ class DotthzFile:
                         measurement.meta_data.md[desc] = str(group.attrs[md_name])
             groups[group_name] = measurement
         file.close()
-        return cls(groups=groups)
+        return groups
 
     def save(self, path: Path):
         with h5py.File(str(path), 'w') as file:
