@@ -19,7 +19,7 @@ from dotthz import DotthzFile, DotthzMeasurement, DotthzMetaData
 if __name__ == "__main__":
 
     # Create a new .thz file
-    file = DotthzFile().new()
+    file = DotthzFile.new()
 
     # Sample data
     time = np.linspace(0, 1, 100)  # your time array
@@ -43,15 +43,20 @@ if __name__ == "__main__":
 
     # save the file
     path1 = Path("test1.thz")
-    path2 = Path("test2.thz")
     file.save(path1)
+    del file
+    
+    # create and save a second file
+    path2 = Path("test2.thz")
+    file = DotthzFile.new()
+    file.groups["Measurment 2"] = measurement
     file.save(path2)
     del file
 
     # open the file again
-    file = DotthzFile.from_file(path1)
+    file = DotthzFile.load_from_file(path1)
 
-    # add more measurements from a file
+    # add more measurements from the second file
     file.add_from_file(path2)
 
     # read the first group (measurement)

@@ -43,7 +43,7 @@ class DotthzFile:
         return cls(groups={"Measurement 1": measurement})
 
     @classmethod
-    def from_file(cls, path):
+    def load_from_file(cls, path):
         file_groups = cls._load(None, path)
         return cls(groups=file_groups)
 
