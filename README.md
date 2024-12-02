@@ -54,7 +54,7 @@ if __name__ == "__main__":
     del file
 
     # open the file again
-    file = DotthzFile.load_from_file(path1)
+    file = DotthzFile.load(path1)
 
     # add more measurements from the second file
     file.add_from_file(path2)
