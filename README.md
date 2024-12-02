@@ -17,15 +17,18 @@ import numpy as np
 from dotthz import DotthzFile, DotthzMeasurement, DotthzMetaData
 
 if __name__ == "__main__":
+
+    # Create a new .thz file
+    file = DotthzFile().new()
+
     # Sample data
     time = np.linspace(0, 1, 100)  # your time array
     data = np.random.rand(100)  # example 3D data array
 
-    file = DotthzFile()
-
     measurement = DotthzMeasurement()
     # for thzVer 1.00, we need to transpose the array!
-    measurement.datasets = {"Sample": np.array([time, data]).T}
+    datasets = {"Sample": np.array([time, data]).T}
+    measurement.datasets = datasets
 
     # set meta_data
     meta_data = DotthzMetaData()
@@ -40,10 +43,13 @@ if __name__ == "__main__":
 
     # save the file
     file.save(Path("test.thz"))
+    del file
 
     # open the file again
-    path = Path("test.thz")
-    file = DotthzFile.load(path)
+    file = DotthzFile.from_file("test.thz")
+
+    # add more measurements from a file
+    file.add_from_file("test2.thz")
 
     # read the first group (measurement)
     key = list(file.groups.keys())[0]
