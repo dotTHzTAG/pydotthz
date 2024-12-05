@@ -10,6 +10,10 @@ Install it
 ```shell
 pip install pydotthz
 ```
+or
+```shell
+pip3 install pydotthz
+```
 
 and then use like specified in the following example:
 
