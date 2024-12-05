@@ -29,46 +29,52 @@ class DotthzMeasurement:
     meta_data: DotthzMetaData = field(default_factory=DotthzMetaData)
 
 
-@dataclass
 class DotthzFile:
-    groups: Dict[str, DotthzMeasurement] = field(default_factory=dict)
+    def __init__(self, name, mode="r", driver=None, libver=None, userblock_size=None, swmr=False,
+                 rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, track_order=None,
+                 fs_strategy=None, fs_persist=False, fs_threshold=1, fs_page_size=None,
+                 page_buf_size=None, min_meta_keep=0, min_raw_keep=0, locking=None,
+                 alignment_threshold=1, alignment_interval=1, meta_block_size=None, **kwds):
+        self.groups = {}
+        self.file = h5py.File(name, mode, driver=driver, libver=libver, userblock_size=userblock_size, swmr=swmr,
+                              rdcc_nslots=rdcc_nslots,
+                              rdcc_nbytes=rdcc_nbytes, rdcc_w0=rdcc_w0, track_order=track_order,
+                              fs_strategy=fs_strategy, fs_persist=fs_persist, fs_threshold=fs_threshold,
+                              fs_page_size=fs_page_size,
+                              page_buf_size=page_buf_size, min_meta_keep=min_meta_keep, min_raw_keep=min_raw_keep,
+                              locking=locking, alignment_threshold=alignment_threshold,
+                              alignment_interval=alignment_interval, meta_block_size=meta_block_size, **kwds)
 
-    @classmethod
-    def new(cls):
-        return cls(groups={})
+        if "r" in mode or "a" in mode:
+            self._load()
 
-    @classmethod
-    def from_data(cls, data: np.ndarray, meta_data: DotthzMetaData):
-        measurement = DotthzMeasurement(datasets={"ds1": data}, meta_data=meta_data)
-        return cls(groups={"Measurement 1": measurement})
+    def __enter__(self):
+        """Enable the use of the `with` statement."""
+        return self
 
-    @classmethod
-    def load(cls, path):
-        file_groups = cls._load(None, path)
-        return cls(groups=file_groups)
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Close any resources if applicable."""
+        if self.file is not None:
+            self.file.close()
+            self.file = None
 
-    def add_from_file(self, path):
-        file_groups = self._load(path)
-        self.groups.update(file_groups)
 
-    def _load(self, path: Path):
-        file = h5py.File(str(path), 'r')
+    def _load(self):
         groups = {}
-
-        for group_name, group in file.items():
+        for group_name, group in self.file.items():
             measurement = DotthzMeasurement()
 
             # Load datasets
             if "dsDescription" in group.attrs:
                 ds_description_attr = group.attrs["dsDescription"]
                 if isinstance(ds_description_attr, np.ndarray):
-                    # Assume it’s a single-element array; get the first element
                     ds_description_str = ds_description_attr[0] if ds_description_attr.size == 1 else ", ".join(
                         map(str, ds_description_attr))
                 else:
-                    ds_description_str = ds_description_attr  # Already a string
+                    ds_description_str = ds_description_attr
 
-                ds_descriptions = [ds.strip() for ds in ds_description_str.split(",")] if isinstance(ds_description_str, str) else []
+                ds_descriptions = [ds.strip() for ds in ds_description_str.split(",")] if isinstance(ds_description_str,
+                                                                                                     str) else []
                 for i, desc in enumerate(ds_descriptions):
                     dataset_name = f"ds{i + 1}"
                     if dataset_name in group:
@@ -78,15 +84,11 @@ class DotthzFile:
             for attr in ["description", "date", "instrument", "mode", "time"]:
                 if attr in group.attrs:
                     setattr(measurement.meta_data, attr, group.attrs[attr])
-                    # Load user metadata with structure "ORCID/user/email/institution"
 
             if "thzVer" in group.attrs:
-                if type(group.attrs["thzVer"]) == list:
-                    measurement.meta_data.version = group.attrs["thzVer"][0]
-                else:
-                    measurement.meta_data.version = group.attrs["thzVer"]
+                measurement.meta_data.version = group.attrs["thzVer"][0] if isinstance(group.attrs["thzVer"], list) else \
+                    group.attrs["thzVer"]
 
-            # Load user metadata with structure "ORCID/user/email/institution"
             if "user" in group.attrs:
                 user_info = group.attrs["user"].split("/")
                 fields = ["orcid", "user", "email", "institution"]
@@ -94,71 +96,74 @@ class DotthzFile:
                     if i < len(fields):
                         setattr(measurement.meta_data, fields[i], part)
 
-            # Load additional metadata descriptions and values
             if "mdDescription" in group.attrs:
-                # Retrieve "mdDescription" attribute and handle possible array type
                 md_description_attr = group.attrs["mdDescription"]
                 if isinstance(md_description_attr, np.ndarray):
-                    # Join array elements if necessary
                     md_description_str = md_description_attr[0] if md_description_attr.size == 1 else ", ".join(
                         map(str, md_description_attr))
                 else:
-                    md_description_str = md_description_attr  # Already a string
+                    md_description_str = md_description_attr
 
-                # Now apply split if it’s a string
-                md_descriptions = [md.strip() for md in md_description_str.split(",")] if isinstance(md_description_str, str) else []
-
-                # Iterate over the split descriptions to populate metadata
+                md_descriptions = [md.strip() for md in md_description_str.split(",")] if isinstance(md_description_str,
+                                                                                                     str) else []
                 for i, desc in enumerate(md_descriptions):
                     md_name = f"md{i + 1}"
                     if md_name in group.attrs:
                         measurement.meta_data.md[desc] = str(group.attrs[md_name])
+
             groups[group_name] = measurement
-        file.close()
-        return groups
 
-    def save(self, path: Path):
-        with h5py.File(str(path), 'w') as file:
-            for group_name, measurement in self.groups.items():
-                group = file.create_group(group_name)
+        self.groups.update(groups)
 
-                # Write dataset descriptions
-                ds_descriptions = ", ".join(measurement.datasets.keys())
-                group.attrs["dsDescription"] = ds_descriptions
+    def get_measurements(self):
+        return self.groups
 
-                # Write datasets
-                for i, (name, dataset) in enumerate(measurement.datasets.items()):
-                    ds_name = f"ds{i + 1}"
-                    group.create_dataset(ds_name, data=dataset)
+    def get_measurement_names(self):
+        return self.groups.keys()
 
-                # Write metadata
-                for attr_name, attr_value in measurement.meta_data.__dict__.items():
-                    if attr_name == "md":
-                        # Write md descriptions as an attribute
-                        md_descriptions = ", ".join(measurement.meta_data.md.keys())
-                        group.attrs["mdDescription"] = md_descriptions
-                        for i, (md_key, md_value) in enumerate(measurement.meta_data.md.items()):
-                            md_name = f"md{i + 1}"
-                            try:
-                                # Attempt to save as float if possible
-                                group.attrs[md_name] = float(md_value)
-                                print(md_name, group.attrs[md_name])
-                            except ValueError:
-                                group.attrs[md_name] = md_value
-                    elif attr_name == "version":
-                        group.attrs["thzVer"] = measurement.meta_data.version
+    def get_measurement(self, group_name):
+        return self.groups.get(group_name)
 
-                    elif attr_name in ["orcid", "user", "email", "institution"]:
-                        continue
-                    else:
-                        if attr_value:  # Only write non-empty attributes
-                            group.attrs[attr_name] = attr_value
+    def write_measurement(self, group_name: str, measurement: DotthzMeasurement):
+        group = self.file.create_group(group_name)
 
-                # Write user metadata in the format "ORCID/user/email/institution"
-                user_info = "/".join([
-                    measurement.meta_data.orcid,
-                    measurement.meta_data.user,
-                    measurement.meta_data.email,
-                    measurement.meta_data.institution
-                ])
-                group.attrs["user"] = user_info
+        # Write dataset descriptions
+        ds_descriptions = ", ".join(measurement.datasets.keys())
+        group.attrs["dsDescription"] = ds_descriptions
+
+        # Write datasets
+        for i, (name, dataset) in enumerate(measurement.datasets.items()):
+            ds_name = f"ds{i + 1}"
+            group.create_dataset(ds_name, data=dataset)
+
+        # Write metadata
+        for attr_name, attr_value in measurement.meta_data.__dict__.items():
+            if attr_name == "md":
+                # Write md descriptions as an attribute
+                md_descriptions = ", ".join(measurement.meta_data.md.keys())
+                group.attrs["mdDescription"] = md_descriptions
+                for i, (md_key, md_value) in enumerate(measurement.meta_data.md.items()):
+                    md_name = f"md{i + 1}"
+                    try:
+                        # Attempt to save as float if possible
+                        group.attrs[md_name] = float(md_value)
+                        print(md_name, group.attrs[md_name])
+                    except ValueError:
+                        group.attrs[md_name] = md_value
+            elif attr_name == "version":
+                group.attrs["thzVer"] = measurement.meta_data.version
+
+            elif attr_name in ["orcid", "user", "email", "institution"]:
+                continue
+            else:
+                if attr_value:  # Only write non-empty attributes
+                    group.attrs[attr_name] = attr_value
+
+        # Write user metadata in the format "ORCID/user/email/institution"
+        user_info = "/".join([
+            measurement.meta_data.orcid,
+            measurement.meta_data.user,
+            measurement.meta_data.email,
+            measurement.meta_data.institution
+        ])
+        group.attrs["user"] = user_info
