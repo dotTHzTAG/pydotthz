@@ -1,7 +1,7 @@
 # Interface with dotThz files using Python
 [![PEP8](https://github.com/hacknus/pydotthz/actions/workflows/format.yml/badge.svg)](https://github.com/hacknus/pydotthz/actions/workflows/format.yml)
-![PyPI](https://img.shields.io/pypi/v/pydotthz?label=pypi%20package)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/pydotthz)
+[![PyPI](https://pypi.org/project/pydotthz/)](https://img.shields.io/pypi/v/pydotthz?label=pypi%20package)
+[![PyPI - Downloads](https://pypi.org/project/pydotthz/)](https://img.shields.io/pypi/dm/pydotthz)
 
 This crate provides an easy way to interface with [dotThz](https://github.com/dotTHzTAG) files in Python.
 
