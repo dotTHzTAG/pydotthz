@@ -11,7 +11,7 @@ env:
 
 jobs:
   check-format:
-    name: Check PEP8 formatting
+    name: PEP8
     runs-on: ubuntu-latest
     steps:
       - name: PEP8 Action
