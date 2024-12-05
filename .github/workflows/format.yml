@@ -1,4 +1,4 @@
-name: Check PEP8 formatting
+name: PEP8
 
 on:
   push:

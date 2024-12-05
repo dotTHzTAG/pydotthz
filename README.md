@@ -1,4 +1,5 @@
 # Interface with dotThz files using Python
+[![PEP8](https://github.com/hacknus/pydotthz/actions/workflows/format.yml/badge.svg)](https://github.com/hacknus/pydotthz/actions/workflows/format.yml)
 
 This crate provides an easy way to interface with [dotThz](https://github.com/dotTHzTAG) files in Python.
 
