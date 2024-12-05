@@ -17,10 +17,6 @@ import numpy as np
 from dotthz import DotthzFile, DotthzMeasurement, DotthzMetaData
 
 if __name__ == "__main__":
-
-    # Create a new .thz file
-    file = DotthzFile.new()
-
     # Sample data
     time = np.linspace(0, 1, 100)  # your time array
     data = np.random.rand(100)  # example 3D data array
@@ -30,7 +26,7 @@ if __name__ == "__main__":
     datasets = {"Sample": np.array([time, data]).T}
     measurement.datasets = datasets
 
-    # set meta_data
+    # create meta-data
     meta_data = DotthzMetaData()
     meta_data.user = "John Doe"
     meta_data.version = "1.00"
@@ -39,31 +35,30 @@ if __name__ == "__main__":
 
     measurement.meta_data = meta_data
 
-    file.groups["Measurement"] = measurement
-
     # save the file
     path1 = Path("test1.thz")
-    file.save(path1)
-    del file
-    
+    with DotthzFile(path1, "w") as file:
+        file.write_measurement("Measurement 1", measurement)
+    del file  # optional, not required as the file is already closed
+
     # create and save a second file
     path2 = Path("test2.thz")
-    file = DotthzFile.new()
-    file.groups["Measurment 2"] = measurement
-    file.save(path2)
-    del file
+    with DotthzFile(path2, "w") as file:
+        file.write_measurement("Measurement 2", measurement)
+    del file  # optional, not required as the file is already closed
 
-    # open the file again
-    file = DotthzFile.load(path1)
+    # open the first file again in append mode and the second in read mode
+    with DotthzFile(path1, "a") as file1, DotthzFile(path2) as file2:
+        measurements = file2.get_measurements()
+        for name, measurement in measurements.items():
+            file1.write_measurement(name, measurement)
+    del file1  # optional, not required as the file is already closed
 
-    # add more measurements from the second file
-    file.add_from_file(path2)
-
-    # read the first group (measurement)
-    key = list(file.groups.keys())[0]
-    print(file.groups.get(key).meta_data)
-    print(file.groups.get(key).datasets)
-
+    with DotthzFile(path1, "r") as file1:
+        # read the first measurement
+        key = list(file1.get_measurements().keys())[0]
+        print(file1.get_measurements().get(key).meta_data)
+        print(file1.get_measurements().get(key).datasets)
 
 ```
 Requires hdf5 to be installed.
