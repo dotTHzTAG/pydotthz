@@ -2,7 +2,6 @@ import h5py
 from dataclasses import dataclass, field
 from typing import Dict
 import numpy as np
-from pathlib import Path
 
 
 @dataclass
@@ -57,7 +56,6 @@ class DotthzFile:
         if self.file is not None:
             self.file.close()
             self.file = None
-
 
     def _load(self):
         groups = {}
