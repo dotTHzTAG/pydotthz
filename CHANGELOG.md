@@ -2,12 +2,16 @@
 
 All notable changes to the `pydotthz` package will be documented in this file.
 
-# Unreleased 0.3.0
+# Unreleased 0.3.1
 
 ### Added:
 
 * ...
-* 
+
+## 0.3.0 - 28.01.2025
+### Added:
+* Example to interface 2D THz images
+
 ## 0.2.0 - 5.12.2024
 
 ### Added:

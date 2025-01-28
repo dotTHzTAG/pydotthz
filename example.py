@@ -87,13 +87,9 @@ if __name__ == "__main__":
         meta_data.instrument = "Toptica TeraFlash Pro"
         meta_data.mode = "THz-TDS/Transmission"
 
-
         # add more keys from your "info" dictionary ...
         # for (key, value) in info.items():
         #    meta_data.add_field(key, value)
 
         measurement.meta_data = meta_data
         file.groups[f"Image"] = measurement
-
-
-
