@@ -1,5 +1,5 @@
 # Interface with dotTHz files using Python
-[![PEP8](https://github.com/hacknus/pydotthz/actions/workflows/format.yml/badge.svg)](https://github.com/hacknus/pydotthz/actions/workflows/format.yml)
+[![PEP8](https://github.com/dotTHzTAG/pydotthz/actions/workflows/format.yml/badge.svg)](https://github.com/dotTHzTAG/pydotthz/actions/workflows/format.yml)
 [![PyPI](https://img.shields.io/pypi/v/pydotthz?label=pypi%20package)](https://pypi.org/project/pydotthz/)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/pydotthz)](https://pypi.org/project/pydotthz/)
 
