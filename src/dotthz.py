@@ -190,11 +190,13 @@ class DotthzFile:
 
             # Special handling for user metadata.
             if "user" in group.attrs:
-                user_info = self._sanatize(group.attrs["user"]).split("/")
-                fields = ["orcid", "user", "email", "institution"]
-                for i, part in enumerate(user_info):
-                    if i < len(fields):
-                        setattr(measurement.meta_data, fields[i], part)
+                user_info = self._sanatize(group.attrs["user"])
+                if isinstance(user_info, str):
+                    user_info = user_info.split("/")
+                    fields = ["orcid", "user", "email", "institution"]
+                    for i, part in enumerate(user_info):
+                        if i < len(fields):
+                            setattr(measurement.meta_data, fields[i], part)
 
             # Lead measurement metadata.
             if "mdDescription" in group.attrs:
