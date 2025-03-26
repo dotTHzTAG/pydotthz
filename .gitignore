@@ -1,6 +1,5 @@
 /dist/
 /.venv/
-*.thz
 *.pyc
 *.pyo
 pydotthz.egg-info
