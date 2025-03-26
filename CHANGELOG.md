@@ -6,7 +6,9 @@ All notable changes to the `pydotthz` package will be documented in this file.
 
 ### Added:
 
-* ...
+* Changed import name from `dotthz` to `pydotthz` for consistency
+* Added a module level docstring outlining functionality
+* Bug fix for empty user metadata
 
 # 0.3.2
 
