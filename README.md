@@ -21,7 +21,7 @@ and then use like specified in the following example:
 from pathlib import Path
 import numpy as np
 
-from dotthz import DotthzFile, DotthzMeasurement, DotthzMetaData
+from pydotthz import DotthzFile, DotthzMeasurement, DotthzMetaData
 
 if __name__ == "__main__":
     # Sample data

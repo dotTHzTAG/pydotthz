@@ -1,17 +1,17 @@
 import unittest
-from dotthz import DotthzFile, DotthzMeasurement, DotthzMetaData
+from pydotthz import DotthzFile, DotthzMeasurement, DotthzMetaData
 import numpy as np
 from tempfile import NamedTemporaryFile
+from pathlib import Path
 import os
 
 
 class TestDotthzFile(unittest.TestCase):
 
     def test_copy_and_compare_dotthz_files(self):
-        paths = [
-            "../test_files/PVDF_520um.thz",
-            "../test_files/2_VariableTemperature.thz",
-        ]
+        root = Path(__file__).parent
+        paths = [root.joinpath("test_files", "PVDF_520um.thz"),
+                 root.joinpath("test_files", "2_VariableTemperature.thz")]
         for path in paths:
             # Create a temporary file to save the copy
             with NamedTemporaryFile(delete=False) as temp_file:
@@ -58,8 +58,8 @@ class TestDotthzFile(unittest.TestCase):
                         self.assertIsNotNone(copied_dataset)
                         np.testing.assert_array_equal(original_dataset, copied_dataset)
 
-                # Clean up temporary file
-                os.remove(copy_file_path)
+            # Clean up temporary file
+            os.remove(copy_file_path)
 
     def test_dotthz_save_and_load(self):
         with NamedTemporaryFile(delete=False) as temp_file:
@@ -122,8 +122,8 @@ class TestDotthzFile(unittest.TestCase):
                     self.assertIsNotNone(loaded_dataset)
                     np.testing.assert_array_equal(dataset, loaded_dataset)
 
-            # Clean up temporary file
-            os.remove(path)
+        # Clean up temporary file
+        os.remove(path)
 
 
 if __name__ == "__main__":
