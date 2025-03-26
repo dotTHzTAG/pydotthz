@@ -10,6 +10,7 @@ name = "pydotthz"
 version = "0.4.0"
 authors = [
   { name="Linus Leo Stöckli", email="linus.stoeckli@unibe.ch" },
+  { name="Jasper Nelson Ward-Berry", email="jnw35@cam.ac.uk" },
 ]
 description = "This Python Package allows interfacing with dotThz files."
 readme = "README.md"
