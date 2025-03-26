@@ -1,7 +1,6 @@
 from pathlib import Path
 import numpy as np
-
-from dotthz import DotthzFile, DotthzMeasurement, DotthzMetaData
+from pydotthz import DotthzFile, DotthzMeasurement, DotthzMetaData
 
 if __name__ == "__main__":
     # Sample data
@@ -48,7 +47,7 @@ if __name__ == "__main__":
         print(file1.get_measurements().get(key).datasets)
 
     # read out an image file:
-    path3 = Path("test_files/test_image.thz")
+    path3 = Path("tests/test_files/test_image.thz")
     with DotthzFile(path3, "r") as image_file:
         # read the first group/measurement
         key = list(image_file.get_measurements().keys())[0]
@@ -64,15 +63,15 @@ if __name__ == "__main__":
         print(image.shape)
 
     # save an image file:
-    path4 = Path("test_files/test_image_2.thz")
+    path4 = Path("tests/test_files/test_image_2.thz")
     with DotthzFile(path4, "w") as file:
         file.groups = {}
 
         measurement = DotthzMeasurement()
         measurement.datasets = {}
 
-        measurement.datasets[f"time"] = time_trace
-        measurement.datasets[f"dataset"] = image
+        measurement.datasets["time"] = time_trace
+        measurement.datasets["dataset"] = image
 
         # set meta_data
         meta_data = DotthzMetaData()
@@ -92,4 +91,4 @@ if __name__ == "__main__":
         #    meta_data.add_field(key, value)
 
         measurement.meta_data = meta_data
-        file.groups[f"Image"] = measurement
+        file.groups["Image"] = measurement
