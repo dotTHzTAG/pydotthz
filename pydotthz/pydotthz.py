@@ -56,11 +56,68 @@ class DotthzMetaData:
 
 
 class MeasurementDict(dict):
+    """
+       A custom dictionary-like class that wraps around the standard Python dictionary.
+
+       This class is designed to store `DotthzMeasurement` objects and ensure that
+       whenever a new measurement is added or modified, the corresponding measurement
+       is written to the file using the `write_measurement()` method.
+
+       Inherits from `dict` to retain normal dictionary behavior (e.g., iteration,
+       item retrieval), while adding the functionality of writing measurements to
+       an HDF5 file automatically.
+
+       Attributes
+       ----------
+       _file : DotthzFile
+           A reference to the `DotthzFile` instance to which measurements will be written.
+
+       Methods
+       -------
+       __setitem__(self, key, value):
+           Adds a new measurement to the dictionary and automatically writes it to the file.
+
+       __init__(self, base_file, *args, **kwargs):
+           Initializes the `MeasurementDict` and stores a reference to the parent `DotthzFile`.
+       """
+
     def __init__(self, base_file, *args, **kwargs):
+        """
+        Initializes the `MeasurementDict` object.
+
+        Parameters
+        ----------
+        base_file : DotthzFile
+            A reference to the `DotthzFile` instance that will be used to write measurements.
+        *args : tuple
+            Positional arguments passed to the parent `dict` constructor.
+        **kwargs : dict
+            Keyword arguments passed to the parent `dict` constructor.
+        """
         super().__init__(*args, **kwargs)
         self._file = base_file
 
     def __setitem__(self, key, value):
+        """
+        Adds a new `DotthzMeasurement` to the dictionary and writes it to the file.
+
+        When a new measurement is assigned to the dictionary using the key-value syntax
+        (i.e., `measurement_dict[key] = value`), this method is called. It ensures that
+        the `value` is a valid `DotthzMeasurement` object and then automatically calls
+        the `write_measurement()` method of `DotthzFile` to store the measurement.
+
+        Parameters
+        ----------
+        key : str
+           The key under which the measurement will be stored (usually the measurement name).
+        value : DotthzMeasurement
+           The `DotthzMeasurement` object that is being added to the dictionary.
+
+        Raises
+        ------
+        TypeError
+           If `value` is not an instance of `DotthzMeasurement`.
+        """
         if not isinstance(value, DotthzMeasurement):
             raise TypeError("Value must be a DotthzMeasurement.")
         super().__setitem__(key, value)
