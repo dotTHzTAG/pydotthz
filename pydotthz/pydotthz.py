@@ -247,7 +247,7 @@ class DotthzFile:
     def _sanatize(self, md_in):
         # Reduces redundant iterables to base data.
 
-        if isinstance(md_in, Iterable) and len(md_in) == 1:
+        if isinstance(md_in, np.ndarray) and len(md_in) == 1:
             return self._sanatize(md_in[0])
         else:
             return md_in
