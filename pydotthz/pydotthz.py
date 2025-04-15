@@ -145,6 +145,9 @@ class DotthzMeasurement:
     _datasets: Dict[str, np.ndarray] = field(default_factory=dict, repr=False)
     _meta_data: DotthzMetaData = field(default_factory=DotthzMetaData, repr=False)
 
+    def __str__(self):
+        return f"{self._meta_data} {self._datasets}"
+
     @property
     def datasets(self):
         return self._datasets

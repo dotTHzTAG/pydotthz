@@ -22,14 +22,15 @@ if __name__ == "__main__":
         file["Measurement 1"].meta_data = meta_data
 
         # for thzVer 1.00, we need to transpose the array!
-        file["Measurement 1"].datasets["Sample"] = np.array([time, data]).T
+        # important: do not manipulate keys on the `dataset` field, otherwise it won't be written to the file.
+        file["Measurement 1"]["Sample"] = np.array([time, data]).T
 
     del file  # optional, not required as the file is already closed
 
     # create and save a second file
     path2 = Path("test2.thz")
     with DotthzFile(path2, "w") as file:
-        file["Measurement 2"] = measurement
+        file["Measurement 2"] = DotthzMeasurement()
     del file  # optional, not required as the file is already closed
 
     # open the first file again in append mode and the second in read mode
@@ -86,5 +87,6 @@ if __name__ == "__main__":
 
         file.measurements["Image"].meta_data = meta_data
 
-        file.measurements["Image"].datasets["time"] = time_trace
-        file.measurements["Image"].datasets["dataset"] = image
+        # important: do not manipulate keys on the `dataset` field, otherwise it won't be written to the file.
+        file.measurements["Image"]["time"] = time_trace
+        file.measurements["Image"]["dataset"] = image
