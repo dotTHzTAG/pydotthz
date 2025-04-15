@@ -118,10 +118,19 @@ class MeasurementDict(dict):
         TypeError
            If `value` is not an instance of `DotthzMeasurement`.
         """
-        if not isinstance(value, DotthzMeasurement):
-            raise TypeError("Value must be a DotthzMeasurement.")
-        super().__setitem__(key, value)
-        self._file.write_measurement(key, value)
+
+        if isinstance(value, DotthzMeasurement):
+            super().__setitem__(key, value)
+            self._file.write_measurement(key, value)
+        elif isinstance(value, np.ndarray):
+            measurement = self[key]  # Existing measurement
+            measurement.datasets[key] = value  # Update dataset directly
+            self._file.write_measurement(key, measurement)
+        else:
+            raise TypeError("Value must be a DotthzMeasurement or a numpy array.")
+
+    def __getitem__(self, key):
+        return super().__getitem__(key)
 
 
 @dataclass
@@ -139,6 +148,18 @@ class DotthzMeasurement:
     """
     datasets: Dict[str, np.ndarray] = field(default_factory=dict)
     meta_data: DotthzMetaData = field(default_factory=DotthzMetaData)
+
+    def __getitem__(self, key):
+        """Override __getitem__ to allow dataset access like file_to_extend.measurements[...]"""
+        return self.datasets[key]
+
+    def __setitem__(self, key, value):
+        """Override __setitem__ to ensure the setter is called when modifying a dataset."""
+        self.datasets[key] = value
+        # Here we can trigger the save method manually (optional depending on design)
+        # This will ensure the measurement is written when a dataset is updated
+        if hasattr(self, '_file'):
+            self._file.write_measurement(self._measurement_name, self)
 
 
 class DotthzFile:
@@ -221,7 +242,6 @@ class DotthzFile:
 
     @measurements.setter
     def measurements(self, value):
-        self._measurements.clear()
         for name, measurement in value.items():
             self._measurements[name] = measurement
 
@@ -267,7 +287,7 @@ class DotthzFile:
                 for i, desc in enumerate(ds_descriptions):
                     dataset_name = f"ds{i + 1}"
                     if dataset_name in group:
-                        measurement.datasets[desc] = group[dataset_name][...]
+                        measurement.datasets[desc] = group[dataset_name]
 
             # Load metadata attributes.
             for attr in ["description", "date", "instrument",
@@ -371,7 +391,8 @@ class DotthzFile:
         measurement : DotthzMeasurement
             The measurement to be added to the file object.
         """
-        group = self.file.create_group(name)
+
+        group = self.file[name] if name in self.file else self.file.create_group(name)
 
         # Write dataset descriptions
         ds_descriptions = ", ".join(measurement.datasets.keys())
@@ -380,7 +401,18 @@ class DotthzFile:
         # Write datasets
         for i, (name, dataset) in enumerate(measurement.datasets.items()):
             ds_name = f"ds{i + 1}"
-            group.create_dataset(ds_name, data=dataset)
+            if ds_name in group:
+                existing_ds = group[ds_name]
+                if existing_ds.shape == dataset.shape and existing_ds.dtype == dataset.dtype:
+                    existing_ds[...] = dataset
+                else:
+                    del group[ds_name]
+                    group.create_dataset(ds_name, data=dataset)
+            else:
+                group.create_dataset(ds_name, data=dataset)
+
+            # Store a reference to the HDF5 dataset in the wrapper
+            measurement.datasets[name] = np.array(group[ds_name])
 
         # Write metadata
         for attr_name, attr_value in measurement.meta_data.__dict__.items():

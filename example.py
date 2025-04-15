@@ -24,20 +24,20 @@ if __name__ == "__main__":
     # save the file
     path1 = Path("test1.thz")
     with DotthzFile(path1, "w") as file:
-        file.write_measurement("Measurement 1", measurement)
+        file["Measurement 1"] = measurement
     del file  # optional, not required as the file is already closed
 
     # create and save a second file
     path2 = Path("test2.thz")
     with DotthzFile(path2, "w") as file:
-        file.write_measurement("Measurement 2", measurement)
+        file["Measurement 2"] = measurement
     del file  # optional, not required as the file is already closed
 
     # open the first file again in append mode and the second in read mode
     with DotthzFile(path1, "a") as file1, DotthzFile(path2) as file2:
         measurements = file2.measurements
         for name, measurement in measurements.items():
-            file1.write_measurement(name, measurement)
+            file1[name] =  measurement
     del file1  # optional, not required as the file is already closed
 
     with DotthzFile(path1, "r") as file1:
