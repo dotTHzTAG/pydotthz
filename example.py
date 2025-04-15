@@ -7,24 +7,23 @@ if __name__ == "__main__":
     time = np.linspace(0, 1, 100)  # your time array
     data = np.random.rand(100)  # example 3D data array
 
-    measurement = DotthzMeasurement()
-    # for thzVer 1.00, we need to transpose the array!
-    datasets = {"Sample": np.array([time, data]).T}
-    measurement.datasets = datasets
-
-    # create meta-data
-    meta_data = DotthzMetaData()
-    meta_data.user = "John Doe"
-    meta_data.version = "1.00"
-    meta_data.instrument = "Toptica TeraFlash Pro"
-    meta_data.mode = "THz-TDS/Transmission"
-
-    measurement.meta_data = meta_data
-
     # save the file
     path1 = Path("test1.thz")
     with DotthzFile(path1, "w") as file:
-        file["Measurement 1"] = measurement
+        file["Measurement 1"] = DotthzMeasurement()
+
+        # create meta-data
+        meta_data = DotthzMetaData()
+        meta_data.user = "John Doe"
+        meta_data.version = "1.00"
+        meta_data.instrument = "Toptica TeraFlash Pro"
+        meta_data.mode = "THz-TDS/Transmission"
+
+        file["Measurement 1"].meta_data = meta_data
+
+        # for thzVer 1.00, we need to transpose the array!
+        file["Measurement 1"].datasets["Sample"] = np.array([time, data]).T
+
     del file  # optional, not required as the file is already closed
 
     # create and save a second file
@@ -37,7 +36,7 @@ if __name__ == "__main__":
     with DotthzFile(path1, "a") as file1, DotthzFile(path2) as file2:
         measurements = file2.measurements
         for name, measurement in measurements.items():
-            file1[name] =  measurement
+            file1[name] = measurement
     del file1  # optional, not required as the file is already closed
 
     with DotthzFile(path1, "r") as file1:
@@ -67,10 +66,6 @@ if __name__ == "__main__":
     with DotthzFile(path4, "w") as file:
 
         file.measurements["Image"] = DotthzMeasurement()
-        file.measurements["Image"].datasets = {}
-
-        file.measurements["Image"].datasets["time"] = time_trace
-        file.measurements["Image"].datasets["dataset"] = image
 
         # set meta_data
         meta_data = DotthzMetaData()
@@ -90,3 +85,6 @@ if __name__ == "__main__":
         #    meta_data.add_field(key, value)
 
         file.measurements["Image"].meta_data = meta_data
+
+        file.measurements["Image"].datasets["time"] = time_trace
+        file.measurements["Image"].datasets["dataset"] = image
