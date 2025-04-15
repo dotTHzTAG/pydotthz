@@ -158,7 +158,7 @@ class DotthzMeasurement:
         self.datasets[key] = value
         # Here we can trigger the save method manually (optional depending on design)
         # This will ensure the measurement is written when a dataset is updated
-        if hasattr(self, '_file'):
+        if hasattr(self, '_file') and hasattr(self, '_measurement_name'):
             self._file.write_measurement(self._measurement_name, self)
 
 
@@ -411,8 +411,7 @@ class DotthzFile:
             else:
                 group.create_dataset(ds_name, data=dataset)
 
-            # Store a reference to the HDF5 dataset in the wrapper
-            measurement.datasets[name] = np.array(group[ds_name])
+            measurement.datasets[name] = group[ds_name]
 
         # Write metadata
         for attr_name, attr_value in measurement.meta_data.__dict__.items():
