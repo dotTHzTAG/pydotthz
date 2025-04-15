@@ -35,24 +35,24 @@ if __name__ == "__main__":
 
     # open the first file again in append mode and the second in read mode
     with DotthzFile(path1, "a") as file1, DotthzFile(path2) as file2:
-        measurements = file2.get_measurements()
+        measurements = file2.measurements
         for name, measurement in measurements.items():
             file1.write_measurement(name, measurement)
     del file1  # optional, not required as the file is already closed
 
     with DotthzFile(path1, "r") as file1:
         # read the first measurement
-        key = list(file1.get_measurements().keys())[0]
-        print(file1.get_measurements().get(key).meta_data)
-        print(file1.get_measurements().get(key).datasets)
+        key = list(file1.measurements.keys())[0]
+        print(file1.measurements.get(key).meta_data)
+        print(file1.measurements.get(key).datasets)
 
     # read out an image file:
     path3 = Path("tests/test_files/test_image.thz")
     with DotthzFile(path3, "r") as image_file:
         # read the first group/measurement
-        key = list(image_file.get_measurements().keys())[0]
-        print(image_file.get_measurements().get(key).meta_data)
-        datasets = image_file.get_measurements().get(key).datasets
+        key = list(image_file.measurements.keys())[0]
+        print(image_file.measurements.get(key).meta_data)
+        datasets = image_file.measurements.get(key).datasets
         print(datasets.keys())
 
         # from the first dataset, extract the image:
@@ -65,13 +65,12 @@ if __name__ == "__main__":
     # save an image file:
     path4 = Path("tests/test_files/test_image_2.thz")
     with DotthzFile(path4, "w") as file:
-        file.groups = {}
 
-        measurement = DotthzMeasurement()
-        measurement.datasets = {}
+        file.measurements["Image"] = DotthzMeasurement()
+        file.measurements["Image"].datasets = {}
 
-        measurement.datasets["time"] = time_trace
-        measurement.datasets["dataset"] = image
+        file.measurements["Image"].datasets["time"] = time_trace
+        file.measurements["Image"].datasets["dataset"] = image
 
         # set meta_data
         meta_data = DotthzMetaData()
@@ -90,5 +89,4 @@ if __name__ == "__main__":
         # for (key, value) in info.items():
         #    meta_data.add_field(key, value)
 
-        measurement.meta_data = meta_data
-        file.groups["Image"] = measurement
+        file.measurements["Image"].meta_data = meta_data
