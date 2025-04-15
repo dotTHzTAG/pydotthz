@@ -4,6 +4,9 @@ from collections.abc import Iterable
 from warnings import warn
 import numpy as np
 import h5py
+import warnings
+
+warnings.simplefilter("always", DeprecationWarning)
 
 
 @dataclass
@@ -50,6 +53,18 @@ class DotthzMetaData:
 
     def add_field(self, key, value):
         self.md[key] = value
+
+
+class MeasurementDict(dict):
+    def __init__(self, base_file, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._file = base_file
+
+    def __setitem__(self, key, value):
+        if not isinstance(value, DotthzMeasurement):
+            raise TypeError("Value must be a DotthzMeasurement.")
+        super().__setitem__(key, value)
+        self._file.write_measurement(key, value)
 
 
 @dataclass
@@ -106,7 +121,7 @@ class DotthzFile:
                  fs_page_size=None, page_buf_size=None, min_meta_keep=0,
                  min_raw_keep=0, locking=None, alignment_threshold=1,
                  alignment_interval=1, meta_block_size=None, **kwds):
-        self.measurements = {}
+        self._measurements = MeasurementDict(self)
         self.file = h5py.File(name, mode, driver=driver, libver=libver,
                               userblock_size=userblock_size, swmr=swmr,
                               rdcc_nslots=rdcc_nslots, rdcc_nbytes=rdcc_nbytes,
@@ -135,6 +150,23 @@ class DotthzFile:
         if self.file is not None:
             self.file.close()
             self.file = None
+
+    def __getitem__(self, key):
+        return self._measurements[key]
+
+    def __setitem__(self, key, value: DotthzMeasurement):
+        self._measurements[key] = value
+        self.write_measurement(key, value)
+
+    @property
+    def measurements(self):
+        return self._measurements
+
+    @measurements.setter
+    def measurements(self, value):
+        self._measurements.clear()
+        for name, measurement in value.items():
+            self._measurements[name] = measurement
 
     def _get_descriptions(self, desc_in):
         # Handles inconsistent formatting for metadata descriptions.
@@ -214,7 +246,7 @@ class DotthzFile:
 
             groups[group_name] = measurement
 
-        self.measurements.update(groups)
+        self._measurements.update(groups)
 
     def load(self, path):
         """Load measurements from a .thz file at the path to the file object.
@@ -229,15 +261,29 @@ class DotthzFile:
         file.close()
 
     def get_measurements(self):
-        "Return a dict of all measurements in the file object."
+        """
+        Return a dict of all measurements in the file object.
+
+        .. deprecated:: 1.0
+            Use `file.measurements` instead.
+        """
+        warnings.warn(
+            "get_measurements is deprecated and will be removed in a future version. "
+            "Use file.measurements instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         return self.measurements
 
     def get_measurement_names(self):
         """Return a list of all measurement names in the file object."""
-        return list(self.measurements.keys())
+        return list(self._measurements.keys())
 
     def get_measurement(self, name):
         """Return the specified measurement from the file object.
+
+        .. deprecated:: 1.0
+            Use `file.measurements[name]` or `file[name]` instead.
 
         Parameters
         ----------
@@ -249,7 +295,13 @@ class DotthzFile:
         DotthzMeasurement
             The requested measurement
         """
-        return self.measurements.get(name)
+        warnings.warn(
+            "get_measurement is deprecated and will be removed in a future version. "
+            "Use file.measurements[name] or file[name] instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self._measurements.get(name)
 
     def write_measurement(self, name: str,
                           measurement: DotthzMeasurement):
