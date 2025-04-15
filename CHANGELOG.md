@@ -4,6 +4,21 @@ All notable changes to the `pydotthz` package will be documented in this file.
 
 # Unreleased
 
+* ...
+
+# 1.0.0
+
+### Added:
+
+* `DotTHzFile` now allows accessing measurements like a dictionary: `file[name]`
+* When setting a measurement value either in `file[name]` or `file.measurements[name]` it is automatically written to
+  the file on the disk.
+
+### Deprecated:
+
+* Usage of `file.get_measurements()` is replaced by `file.measurements`
+* Usage of `file.get_measurement(name)` is replaced by `file[name]` or `file.measurements[name]`
+
 ### Breaking:
 
 * Changed import name from `dotthz` to `pydotthz` for consistency
