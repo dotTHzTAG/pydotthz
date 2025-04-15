@@ -86,19 +86,16 @@ class TestDotthzFile(unittest.TestCase):
             date="2024-11-08"
         )
 
-        measurements = {
-            "Measurement 1": DotthzMeasurement(datasets=datasets, meta_data=meta_data)
-        }
-
         with DotthzFile(path, "w") as file_to_write:
             # test writing measurement by measurement
-            for name, measurement in measurements.items():
-                file_to_write.measurements[name] = measurement
+            file_to_write.measurements["Measurement 1"] = DotthzMeasurement()
+            file_to_write.measurements["Measurement 1"].meta_data = meta_data
+            file_to_write.measurements["Measurement 1"].datasets = datasets
 
         # Load from the temporary file
         with DotthzFile(path) as loaded_file:
             # Compare original and loaded data
-            self.assertEqual(len(measurements), len(loaded_file.measurements))
+            self.assertEqual(1, len(loaded_file.measurements))
 
             loaded_measurement = loaded_file.measurements["Measurement 1"]
             self.assertIsNotNone(loaded_measurement)
@@ -154,18 +151,15 @@ class TestDotthzFile(unittest.TestCase):
             date="2024-11-08"
         )
 
-        measurements = {
-            "Measurement 1": DotthzMeasurement(datasets=datasets, meta_data=meta_data)
-        }
-
         with DotthzFile(path, "w") as file_to_write:
-            for name, measurement in measurements.items():
-                file_to_write.measurements[name] = measurement
+            file_to_write.measurements["Measurement 1"] = DotthzMeasurement()
+            file_to_write.measurements["Measurement 1"].meta_data = meta_data
+            file_to_write.measurements["Measurement 1"].datasets = datasets
 
         # Load from the temporary file
         with DotthzFile(path) as loaded_file:
             # Compare original and loaded data
-            self.assertEqual(len(measurements), len(loaded_file.measurements))
+            self.assertEqual(1, len(loaded_file.measurements))
 
             loaded_measurement = loaded_file["Measurement 1"]
             self.assertIsNotNone(loaded_measurement)
@@ -217,27 +211,23 @@ class TestDotthzFile(unittest.TestCase):
             date="2024-11-08"
         )
 
-        measurements = {
-            "Measurement 1": DotthzMeasurement(datasets=datasets, meta_data=meta_data)
-        }
-
         with DotthzFile(path, "w") as file_to_write:
-
-            for name, measurement in measurements.items():
-                file_to_write.measurements[name] = measurement
+            file_to_write.measurements["Measurement 1"] = DotthzMeasurement()
+            file_to_write.measurements["Measurement 1"].meta_data = meta_data
+            file_to_write.measurements["Measurement 1"].datasets = datasets
             file_to_write.measurements["Measurement 1"].datasets["ds1"][0, 0] = 0.0
-
-        # with DotthzFile(path, "r+") as file_to_extend:
-        #     file_to_extend.measurements["Measurement 1"].datasets["ds1"][0, 0] = 0.0
 
         # Load from the temporary file
         with DotthzFile(path) as loaded_file:
             # Compare original and loaded data
-            self.assertEqual(len(measurements), len(loaded_file.measurements))
+            self.assertEqual(1, len(loaded_file.measurements))
 
             for group_name, measurement in file_to_write.measurements.items():
                 loaded_measurement = loaded_file[group_name]
+                print(loaded_measurement.datasets)
+
                 self.assertIsNotNone(loaded_measurement)
+                self.assertIsNotNone(measurement)
 
                 # Compare metadata fields
                 self.assertEqual(measurement.meta_data.user, loaded_measurement.meta_data.user)

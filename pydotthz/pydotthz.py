@@ -120,12 +120,16 @@ class MeasurementDict(dict):
         """
 
         if isinstance(value, DotthzMeasurement):
+            value._file = self._file
+            value._measurement_name = key
             super().__setitem__(key, value)
             self._file.write_measurement(key, value)
+
         elif isinstance(value, np.ndarray):
-            measurement = self[key]  # Existing measurement
-            measurement.datasets[key] = value  # Update dataset directly
+            measurement = self[key]
+            measurement.datasets[key] = value  # This now triggers the dataset setter
             self._file.write_measurement(key, measurement)
+
         else:
             raise TypeError("Value must be a DotthzMeasurement or a numpy array.")
 
@@ -135,30 +139,38 @@ class MeasurementDict(dict):
 
 @dataclass
 class DotthzMeasurement:
-    """Data class for terahertz time-domain spectroscopy measurements.
+    _file: "DotthzFile" = field(default=None, repr=False, compare=False)
+    _measurement_name: str = field(default=None, repr=False, compare=False)
 
-    Holds a dictionary of datasets and a metadata object.
+    _datasets: Dict[str, np.ndarray] = field(default_factory=dict, repr=False)
+    _meta_data: DotthzMetaData = field(default_factory=DotthzMetaData, repr=False)
 
-    Attributes
-    ----------
-    datasets : dict of array like
-        A dictionary of datasets from a measurement (e.g. waveforms).
-    metadata : DotthzMetaData
-        Object containing the measurement metadata.
-    """
-    datasets: Dict[str, np.ndarray] = field(default_factory=dict)
-    meta_data: DotthzMetaData = field(default_factory=DotthzMetaData)
+    @property
+    def datasets(self):
+        return self._datasets
+
+    @datasets.setter
+    def datasets(self, value):
+        self._datasets = value
+        if self._file and self._measurement_name:
+            self._file.write_measurement(self._measurement_name, self)
+
+    @property
+    def meta_data(self):
+        return self._meta_data
+
+    @meta_data.setter
+    def meta_data(self, value):
+        self._meta_data = value
+        if self._file and self._measurement_name:
+            self._file.write_measurement(self._measurement_name, self)
 
     def __getitem__(self, key):
-        """Override __getitem__ to allow dataset access like file_to_extend.measurements[...]"""
-        return self.datasets[key]
+        return self._datasets[key]
 
     def __setitem__(self, key, value):
-        """Override __setitem__ to ensure the setter is called when modifying a dataset."""
-        self.datasets[key] = value
-        # Here we can trigger the save method manually (optional depending on design)
-        # This will ensure the measurement is written when a dataset is updated
-        if hasattr(self, '_file') and hasattr(self, '_measurement_name'):
+        self._datasets[key] = value
+        if self._file and self._measurement_name:
             self._file.write_measurement(self._measurement_name, self)
 
 
@@ -234,7 +246,7 @@ class DotthzFile:
 
     def __setitem__(self, key, value: DotthzMeasurement):
         self._measurements[key] = value
-        self.write_measurement(key, value)
+        # self.write_measurement(key, value)
 
     @property
     def measurements(self):
