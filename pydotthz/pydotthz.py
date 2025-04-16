@@ -1,3 +1,24 @@
+"""
+DotTHz File Interface
+
+This module defines classes and methods to read, write, and manipulate `.thz` files,
+a format for storing terahertz time-domain spectroscopy (THz-TDS) measurements. It
+supports automatic saving, metadata handling, and dataset management using HDF5.
+
+Classes:
+--------
+- DotthzMetaData: Stores user and measurement metadata.
+- DotthzMeasurement: Encapsulates datasets and metadata for a single measurement.
+- MeasurementDict: Dictionary wrapper to automatically persist DotthzMeasurement instances.
+- DotthzFile: Handles reading/writing `.thz` files and provides access to stored measurements.
+
+Dependencies:
+-------------
+- numpy
+- h5py
+- dataclasses
+"""
+
 from dataclasses import dataclass, field
 from typing import Dict, Any
 from collections.abc import Iterable
@@ -52,6 +73,16 @@ class DotthzMetaData:
     date: str = ""
 
     def add_field(self, key, value):
+        """
+        Add a custom metadata field.
+
+        Parameters
+        ----------
+        key : str
+            Name of the metadata field.
+        value : Any
+            Value of the metadata field.
+        """
         self.md[key] = value
 
 
@@ -262,32 +293,40 @@ class DotthzMeasurement:
 
 class DotthzFile:
     """
-    File class for the .thz format, holding THz time-domain spectroscopy data.
+    Interface for reading, writing, and managing measurements in the `.thz` file format.
 
-    Holds a dictionary of measurment objects and a link to a base file. If the
-    object is initilised in the read or append modes with a path to a valid
-    .thz file then any measurments in that file will be loaded to the object.
+    This class provides persistent storage of THz time-domain spectroscopy data via HDF5.
+    Measurements are represented using the `DotthzMeasurement` class and organized via a
+    dictionary-like interface.
+
+    Supports context manager (`with` statement) for automatic file handling.
+
+    Parameters
+    ----------
+    name : str
+        Path to the `.thz` file.
+    mode : str, optional
+        File mode: 'r' (read), 'w' (write), or 'a' (append). Default is 'r'.
+    **kwds : dict
+        Additional keyword arguments passed to `h5py.File`.
 
     Attributes
     ----------
-    measurements : dict of DotthzMeasurement
-        Dictionary containing thz measurement objects.
     file : h5py.File
-        The base file where measurements are read/written.
+        Underlying HDF5 file object.
+    measurements : MeasurementDict
+        Dictionary-like object of `DotthzMeasurement` instances.
 
     Methods
     -------
-    load(path)
-        Load measurements from a .thz file at the path to the file object.
-    get_measurements
-        Return a dict of all measurements in the file object.
-    get_measurement_names
-        Return a list of all measurement names in the file object.
+    get_measurements()
+        Deprecated. Returns all measurements.
     get_measurement(name)
-        Return the specified measurement from the file object.
+        Deprecated. Returns a measurement by name.
+    get_measurement_names()
+        Returns list of available measurement names.
     write_measurement(name, measurement)
-        Write a measurement to the file object.
-
+        Persist a measurement to the file.
     """
 
     def __init__(self, name, mode="r", driver=None, libver=None,
@@ -371,8 +410,14 @@ class DotthzFile:
             return md_in
 
     def _load(self, file):
-        # Load data from a .thz file.
+        """
+        Internal method to load measurements from an existing .thz HDF5 file.
 
+        Parameters
+        ----------
+        file : h5py.File
+            Opened HDF5 file object from which to load data.
+        """
         groups = {}
         for group_name, group in file.items():
             measurement = DotthzMeasurement()
@@ -468,14 +513,18 @@ class DotthzFile:
 
     def write_measurement(self, name: str,
                           measurement: DotthzMeasurement):
-        """Write a measurement to the file object.
+        """
+        Persist a `DotthzMeasurement` instance to the HDF5 file under the given name.
+
+        Handles writing datasets, user metadata, and additional metadata fields.
+        Overwrites existing datasets and metadata when applicable.
 
         Parameters
         ----------
         name : str
-            The name of the measurement.
+            The name under which to store the measurement in the file.
         measurement : DotthzMeasurement
-            The measurement to be added to the file object.
+            The measurement object containing datasets and metadata.
         """
 
         group = self.file[name] if name in self.file else self.file.create_group(name)
