@@ -16,7 +16,6 @@ Dependencies:
 -------------
 - numpy
 - h5py
-- dataclasses
 """
 
 from dataclasses import dataclass, field
