@@ -423,23 +423,11 @@ class DotthzFile:
 
         self._measurements.update(groups)
 
-    def load(self, path):
-        """Load measurements from a .thz file at the path to the file object.
-
-        Parameters
-        ----------
-        path : str
-            The path to the file.
-        """
-        file = h5py.File(path, 'r')
-        self._load(file)
-        file.close()
-
     def get_measurements(self):
         """
         Return a dict of all measurements in the file object.
 
-        .. deprecated:: 1.0
+        .. deprecated:: 1.0.0
             Use `file.measurements` instead.
         """
         warnings.warn(
@@ -457,7 +445,7 @@ class DotthzFile:
     def get_measurement(self, name):
         """Return the specified measurement from the file object.
 
-        .. deprecated:: 1.0
+        .. deprecated:: 1.0.0
             Use `file.measurements[name]` or `file[name]` instead.
 
         Parameters
