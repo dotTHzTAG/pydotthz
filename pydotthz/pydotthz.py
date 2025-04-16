@@ -139,6 +139,25 @@ class MeasurementDict(dict):
 
 @dataclass
 class DotthzMeasurement:
+    """
+    A data class representing a single terahertz measurement.
+
+    This class holds both the metadata and the datasets associated with a measurement.
+    It includes automatic persistence support: when either `datasets` or `meta_data` is modified,
+    and the measurement is part of a `DotthzFile`, the corresponding file is updated.
+
+    Attributes
+    ----------
+    _file : DotthzFile, optional
+        Reference to the parent `DotthzFile` object. Used to trigger automatic saving.
+    _measurement_name : str, optional
+        The name of the measurement within the file. Used for file I/O.
+    _datasets : dict of str -> np.ndarray
+        Dictionary of datasets related to the measurement.
+    _meta_data : DotthzMetaData
+        Metadata associated with the measurement.
+    """
+
     _file: "DotthzFile" = field(default=None, repr=False, compare=False)
     _measurement_name: str = field(default=None, repr=False, compare=False)
 
@@ -146,32 +165,96 @@ class DotthzMeasurement:
     _meta_data: DotthzMetaData = field(default_factory=DotthzMetaData, repr=False)
 
     def __str__(self):
+        """
+        Return a string representation of the measurement, showing its metadata and dataset keys.
+        """
         return f"{self._meta_data} {self._datasets}"
 
     @property
-    def datasets(self):
+    def datasets(self) -> Dict[str, np.ndarray]:
+        """
+        Access the datasets of the measurement.
+
+        Returns
+        -------
+        dict
+            Dictionary mapping dataset names to NumPy arrays.
+        """
         return self._datasets
 
     @datasets.setter
-    def datasets(self, value):
+    def datasets(self, value: Dict[str, np.ndarray]):
+        """
+        Set the datasets for the measurement.
+
+        Automatically triggers a write to the associated file if available.
+
+        Parameters
+        ----------
+        value : dict
+            Dictionary of datasets to assign.
+        """
         self._datasets = value
         if self._file and self._measurement_name:
             self._file.write_measurement(self._measurement_name, self)
 
     @property
-    def meta_data(self):
+    def meta_data(self) -> DotthzMetaData:
+        """
+        Access the metadata of the measurement.
+
+        Returns
+        -------
+        DotthzMetaData
+            The metadata object.
+        """
         return self._meta_data
 
     @meta_data.setter
-    def meta_data(self, value):
+    def meta_data(self, value: DotthzMetaData):
+        """
+        Set the metadata for the measurement.
+
+        Automatically triggers a write to the associated file if available.
+
+        Parameters
+        ----------
+        value : DotthzMetaData
+            Metadata object to assign.
+        """
         self._meta_data = value
         if self._file and self._measurement_name:
             self._file.write_measurement(self._measurement_name, self)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> np.ndarray:
+        """
+        Access an individual dataset by name using indexing syntax.
+
+        Parameters
+        ----------
+        key : str
+            The name of the dataset to retrieve.
+
+        Returns
+        -------
+        np.ndarray
+            The requested dataset.
+        """
         return self._datasets[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: np.ndarray):
+        """
+        Set or replace an individual dataset by name using indexing syntax.
+
+        Automatically triggers a write to the associated file if available.
+
+        Parameters
+        ----------
+        key : str
+            The name of the dataset.
+        value : np.ndarray
+            The dataset to assign.
+        """
         self._datasets[key] = value
         if self._file and self._measurement_name:
             self._file.write_measurement(self._measurement_name, self)
