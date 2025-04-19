@@ -1,9 +1,32 @@
+"""
+DotTHz File Interface
+
+This module defines classes and methods to read, write, and manipulate `.thz` files,
+a format for storing terahertz time-domain spectroscopy (THz-TDS) measurements. It
+supports automatic saving, metadata handling, and dataset management using HDF5.
+
+Classes:
+--------
+- DotthzMetaData: Stores user and measurement metadata.
+- DotthzMeasurement: Encapsulates datasets and metadata for a single measurement.
+- MeasurementDict: Dictionary wrapper to automatically persist DotthzMeasurement instances.
+- DotthzFile: Handles reading/writing `.thz` files and provides access to stored measurements.
+
+Dependencies:
+-------------
+- numpy
+- h5py
+"""
+
 from dataclasses import dataclass, field
 from typing import Dict, Any
 from collections.abc import Iterable
 from warnings import warn
 import numpy as np
 import h5py
+import warnings
+
+warnings.simplefilter("always", DeprecationWarning)
 
 
 @dataclass
@@ -49,54 +72,260 @@ class DotthzMetaData:
     date: str = ""
 
     def add_field(self, key, value):
+        """
+        Add a custom metadata field.
+
+        Parameters
+        ----------
+        key : str
+            Name of the metadata field.
+        value : Any
+            Value of the metadata field.
+        """
         self.md[key] = value
+
+
+class MeasurementDict(dict):
+    """
+       A custom dictionary-like class that wraps around the standard Python dictionary.
+
+       This class is designed to store `DotthzMeasurement` objects and ensure that
+       whenever a new measurement is added or modified, the corresponding measurement
+       is written to the file using the `write_measurement()` method.
+
+       Inherits from `dict` to retain normal dictionary behavior (e.g., iteration,
+       item retrieval), while adding the functionality of writing measurements to
+       an HDF5 file automatically.
+
+       Attributes
+       ----------
+       _file : DotthzFile
+           A reference to the `DotthzFile` instance to which measurements will be written.
+
+       Methods
+       -------
+       __setitem__(self, key, value):
+           Adds a new measurement to the dictionary and automatically writes it to the file.
+
+       __init__(self, base_file, *args, **kwargs):
+           Initializes the `MeasurementDict` and stores a reference to the parent `DotthzFile`.
+       """
+
+    def __init__(self, base_file, *args, **kwargs):
+        """
+        Initializes the `MeasurementDict` object.
+
+        Parameters
+        ----------
+        base_file : DotthzFile
+            A reference to the `DotthzFile` instance that will be used to write measurements.
+        *args : tuple
+            Positional arguments passed to the parent `dict` constructor.
+        **kwargs : dict
+            Keyword arguments passed to the parent `dict` constructor.
+        """
+        super().__init__(*args, **kwargs)
+        self._file = base_file
+
+    def __setitem__(self, key, value):
+        """
+        Adds a new `DotthzMeasurement` to the dictionary and writes it to the file.
+
+        When a new measurement is assigned to the dictionary using the key-value syntax
+        (i.e., `measurement_dict[key] = value`), this method is called. It ensures that
+        the `value` is a valid `DotthzMeasurement` object and then automatically calls
+        the `write_measurement()` method of `DotthzFile` to store the measurement.
+
+        Parameters
+        ----------
+        key : str
+           The key under which the measurement will be stored (usually the measurement name).
+        value : DotthzMeasurement
+           The `DotthzMeasurement` object that is being added to the dictionary.
+
+        Raises
+        ------
+        TypeError
+           If `value` is not an instance of `DotthzMeasurement`.
+        """
+
+        if isinstance(value, DotthzMeasurement):
+            value._file = self._file
+            value._measurement_name = key
+            super().__setitem__(key, value)
+            self._file.write_measurement(key, value)
+
+        elif isinstance(value, np.ndarray):
+            measurement = self[key]
+            measurement.datasets[key] = value  # This now triggers the dataset setter
+            self._file.write_measurement(key, measurement)
+
+        else:
+            raise TypeError("Value must be a DotthzMeasurement or a numpy array.")
+
+    def __getitem__(self, key):
+        return super().__getitem__(key)
 
 
 @dataclass
 class DotthzMeasurement:
-    """Data class for terahertz time-domain spectroscopy measurements.
+    """
+    A data class representing a single terahertz measurement.
 
-    Holds a dictionary of datasets and a metadata object.
+    This class holds both the metadata and the datasets associated with a measurement.
+    It includes automatic persistence support: when either `datasets` or `meta_data` is modified,
+    and the measurement is part of a `DotthzFile`, the corresponding file is updated.
 
     Attributes
     ----------
-    datasets : dict of array like
-        A dictionary of datasets from a measurement (e.g. waveforms).
-    metadata : DotthzMetaData
-        Object containing the measurement metadata.
+    _file : DotthzFile, optional
+        Reference to the parent `DotthzFile` object. Used to trigger automatic saving.
+    _measurement_name : str, optional
+        The name of the measurement within the file. Used for file I/O.
+    _datasets : dict of str -> np.ndarray
+        Dictionary of datasets related to the measurement.
+    _meta_data : DotthzMetaData
+        Metadata associated with the measurement.
     """
-    datasets: Dict[str, np.ndarray] = field(default_factory=dict)
-    meta_data: DotthzMetaData = field(default_factory=DotthzMetaData)
+
+    _file: "DotthzFile" = field(default=None, repr=False, compare=False)
+    _measurement_name: str = field(default=None, repr=False, compare=False)
+
+    _datasets: Dict[str, np.ndarray] = field(default_factory=dict, repr=False)
+    _meta_data: DotthzMetaData = field(default_factory=DotthzMetaData, repr=False)
+
+    def __str__(self):
+        """
+        Return a string representation of the measurement, showing its metadata and dataset keys.
+        """
+        return f"{self._meta_data} {self._datasets}"
+
+    @property
+    def datasets(self) -> Dict[str, np.ndarray]:
+        """
+        Access the datasets of the measurement.
+
+        Returns
+        -------
+        dict
+            Dictionary mapping dataset names to NumPy arrays.
+        """
+        return self._datasets
+
+    @datasets.setter
+    def datasets(self, value: Dict[str, np.ndarray]):
+        """
+        Set the datasets for the measurement.
+
+        Automatically triggers a write to the associated file if available.
+
+        Parameters
+        ----------
+        value : dict
+            Dictionary of datasets to assign.
+        """
+        self._datasets = value
+        if self._file and self._measurement_name:
+            self._file.write_measurement(self._measurement_name, self)
+
+    @property
+    def meta_data(self) -> DotthzMetaData:
+        """
+        Access the metadata of the measurement.
+
+        Returns
+        -------
+        DotthzMetaData
+            The metadata object.
+        """
+        return self._meta_data
+
+    @meta_data.setter
+    def meta_data(self, value: DotthzMetaData):
+        """
+        Set the metadata for the measurement.
+
+        Automatically triggers a write to the associated file if available.
+
+        Parameters
+        ----------
+        value : DotthzMetaData
+            Metadata object to assign.
+        """
+        self._meta_data = value
+        if self._file and self._measurement_name:
+            self._file.write_measurement(self._measurement_name, self)
+
+    def __getitem__(self, key: str) -> np.ndarray:
+        """
+        Access an individual dataset by name using indexing syntax.
+
+        Parameters
+        ----------
+        key : str
+            The name of the dataset to retrieve.
+
+        Returns
+        -------
+        np.ndarray
+            The requested dataset.
+        """
+        return self._datasets[key]
+
+    def __setitem__(self, key: str, value: np.ndarray):
+        """
+        Set or replace an individual dataset by name using indexing syntax.
+
+        Automatically triggers a write to the associated file if available.
+
+        Parameters
+        ----------
+        key : str
+            The name of the dataset.
+        value : np.ndarray
+            The dataset to assign.
+        """
+        self._datasets[key] = value
+        if self._file and self._measurement_name:
+            self._file.write_measurement(self._measurement_name, self)
 
 
 class DotthzFile:
     """
-    File class for the .thz format, holding THz time-domain spectroscopy data.
+    Interface for reading, writing, and managing measurements in the `.thz` file format.
 
-    Holds a dictionary of measurment objects and a link to a base file. If the
-    object is initilised in the read or append modes with a path to a valid
-    .thz file then any measurments in that file will be loaded to the object.
+    This class provides persistent storage of THz time-domain spectroscopy data via HDF5.
+    Measurements are represented using the `DotthzMeasurement` class and organized via a
+    dictionary-like interface.
+
+    Supports context manager (`with` statement) for automatic file handling.
+
+    Parameters
+    ----------
+    name : str
+        Path to the `.thz` file.
+    mode : str, optional
+        File mode: 'r' (read), 'w' (write), or 'a' (append). Default is 'r'.
+    **kwds : dict
+        Additional keyword arguments passed to `h5py.File`.
 
     Attributes
     ----------
-    measurements : dict of DotthzMeasurement
-        Dictionary containing thz measurement objects.
     file : h5py.File
-        The base file where measurements are read/written.
+        Underlying HDF5 file object.
+    measurements : MeasurementDict
+        Dictionary-like object of `DotthzMeasurement` instances.
 
     Methods
     -------
-    load(path)
-        Load measurements from a .thz file at the path to the file object.
-    get_measurements
-        Return a dict of all measurements in the file object.
-    get_measurement_names
-        Return a list of all measurement names in the file object.
+    get_measurements()
+        Deprecated. Returns all measurements.
     get_measurement(name)
-        Return the specified measurement from the file object.
+        Deprecated. Returns a measurement by name.
+    get_measurement_names()
+        Returns list of available measurement names.
     write_measurement(name, measurement)
-        Write a measurement to the file object.
-
+        Persist a measurement to the file.
     """
 
     def __init__(self, name, mode="r", driver=None, libver=None,
@@ -106,7 +335,7 @@ class DotthzFile:
                  fs_page_size=None, page_buf_size=None, min_meta_keep=0,
                  min_raw_keep=0, locking=None, alignment_threshold=1,
                  alignment_interval=1, meta_block_size=None, **kwds):
-        self.measurements = {}
+        self._measurements = MeasurementDict(self)
         self.file = h5py.File(name, mode, driver=driver, libver=libver,
                               userblock_size=userblock_size, swmr=swmr,
                               rdcc_nslots=rdcc_nslots, rdcc_nbytes=rdcc_nbytes,
@@ -136,6 +365,22 @@ class DotthzFile:
             self.file.close()
             self.file = None
 
+    def __getitem__(self, key):
+        return self._measurements[key]
+
+    def __setitem__(self, key, value: DotthzMeasurement):
+        self._measurements[key] = value
+        # self.write_measurement(key, value)
+
+    @property
+    def measurements(self):
+        return self._measurements
+
+    @measurements.setter
+    def measurements(self, value):
+        for name, measurement in value.items():
+            self._measurements[name] = measurement
+
     def _get_descriptions(self, desc_in):
         # Handles inconsistent formatting for metadata descriptions.
 
@@ -158,14 +403,20 @@ class DotthzFile:
     def _sanatize(self, md_in):
         # Reduces redundant iterables to base data.
 
-        if isinstance(md_in, Iterable) and len(md_in) == 1:
+        if isinstance(md_in, np.ndarray) and len(md_in) == 1:
             return self._sanatize(md_in[0])
         else:
             return md_in
 
     def _load(self, file):
-        # Load data from a .thz file.
+        """
+        Internal method to load measurements from an existing .thz HDF5 file.
 
+        Parameters
+        ----------
+        file : h5py.File
+            Opened HDF5 file object from which to load data.
+        """
         groups = {}
         for group_name, group in file.items():
             measurement = DotthzMeasurement()
@@ -178,7 +429,7 @@ class DotthzFile:
                 for i, desc in enumerate(ds_descriptions):
                     dataset_name = f"ds{i + 1}"
                     if dataset_name in group:
-                        measurement.datasets[desc] = group[dataset_name][...]
+                        measurement.datasets[desc] = group[dataset_name]
 
             # Load metadata attributes.
             for attr in ["description", "date", "instrument",
@@ -214,30 +465,32 @@ class DotthzFile:
 
             groups[group_name] = measurement
 
-        self.measurements.update(groups)
-
-    def load(self, path):
-        """Load measurements from a .thz file at the path to the file object.
-
-        Parameters
-        ----------
-        path : str
-            The path to the file.
-        """
-        file = h5py.File(path, 'r')
-        self._load(file)
-        file.close()
+        self._measurements.update(groups)
 
     def get_measurements(self):
-        "Return a dict of all measurements in the file object."
+        """
+        Return a dict of all measurements in the file object.
+
+        .. deprecated:: 1.0.0
+            Use `file.measurements` instead.
+        """
+        warnings.warn(
+            "get_measurements is deprecated and will be removed in a future version. "
+            "Use file.measurements instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         return self.measurements
 
     def get_measurement_names(self):
         """Return a list of all measurement names in the file object."""
-        return list(self.measurements.keys())
+        return list(self._measurements.keys())
 
     def get_measurement(self, name):
         """Return the specified measurement from the file object.
+
+        .. deprecated:: 1.0.0
+            Use `file.measurements[name]` or `file[name]` instead.
 
         Parameters
         ----------
@@ -249,20 +502,31 @@ class DotthzFile:
         DotthzMeasurement
             The requested measurement
         """
-        return self.measurements.get(name)
+        warnings.warn(
+            "get_measurement is deprecated and will be removed in a future version. "
+            "Use file.measurements[name] or file[name] instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self._measurements.get(name)
 
     def write_measurement(self, name: str,
                           measurement: DotthzMeasurement):
-        """Write a measurement to the file object.
+        """
+        Persist a `DotthzMeasurement` instance to the HDF5 file under the given name.
+
+        Handles writing datasets, user metadata, and additional metadata fields.
+        Overwrites existing datasets and metadata when applicable.
 
         Parameters
         ----------
         name : str
-            The name of the measurement.
+            The name under which to store the measurement in the file.
         measurement : DotthzMeasurement
-            The measurement to be added to the file object.
+            The measurement object containing datasets and metadata.
         """
-        group = self.file.create_group(name)
+
+        group = self.file[name] if name in self.file else self.file.create_group(name)
 
         # Write dataset descriptions
         ds_descriptions = ", ".join(measurement.datasets.keys())
@@ -271,7 +535,17 @@ class DotthzFile:
         # Write datasets
         for i, (name, dataset) in enumerate(measurement.datasets.items()):
             ds_name = f"ds{i + 1}"
-            group.create_dataset(ds_name, data=dataset)
+            if ds_name in group:
+                existing_ds = group[ds_name]
+                if existing_ds.shape == dataset.shape and existing_ds.dtype == dataset.dtype:
+                    existing_ds[...] = dataset
+                else:
+                    del group[ds_name]
+                    group.create_dataset(ds_name, data=dataset)
+            else:
+                group.create_dataset(ds_name, data=dataset)
+
+            measurement.datasets[name] = group[ds_name]
 
         # Write metadata
         for attr_name, attr_value in measurement.meta_data.__dict__.items():
