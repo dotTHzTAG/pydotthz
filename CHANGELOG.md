@@ -6,7 +6,7 @@ All notable changes to the `pydotthz` package will be documented in this file.
 
 * ...
 
-# 1.0.0
+## 1.0.0 - 19.4.2025
 
 ### Added:
 
@@ -19,6 +19,8 @@ All notable changes to the `pydotthz` package will be documented in this file.
 * Usage of `file.get_measurements()` is replaced by `file.measurements`
 * Usage of `file.get_measurement(name)` is replaced by `file[name]` or `file.measurements[name]`
 
+## 0.4.0 - ...
+
 ### Breaking:
 
 * Changed import name from `dotthz` to `pydotthz` for consistency
@@ -28,7 +30,7 @@ All notable changes to the `pydotthz` package will be documented in this file.
 * Added a module level docstring outlining functionality
 * Bug fix for empty user metadata
 
-# 0.3.2
+## 0.3.2 - ...
 
 ### Added:
 
