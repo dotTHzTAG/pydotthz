@@ -9,9 +9,8 @@ import os
 class TestDotthzFile(unittest.TestCase):
 
     def test_copy_and_compare_dotthz_files(self):
-        root = Path(__file__).parent
-        paths = [root.joinpath("test_files", "PVDF_520um.thz"),
-                 root.joinpath("test_files", "2_VariableTemperature.thz")]
+        paths = [Path("test_files/PVDF_520um.thz"),
+                 Path("test_files/2_VariableTemperature.thz")]
         for path in paths:
             # Create a temporary file to save the copy
             with NamedTemporaryFile(delete=False) as temp_file:
