@@ -23,7 +23,7 @@ and then use like specified in the following example:
 ```python
 from pathlib import Path
 import numpy as np
-from pydotthz import DotthzFile, DotthzMeasurement, DotthzMetaData
+from pydotthz import DotthzFile, DotthzMetaData
 
 if __name__ == "__main__":
     # Sample data
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     # save the file
     path1 = Path("test1.thz")
     with DotthzFile(path1, "w") as file:
-        file["Measurement 1"] = DotthzMeasurement()
+        file.create_measurement("Measurement 1")
 
         # create meta-data
         meta_data = DotthzMetaData()
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         meta_data.instrument = "Toptica TeraFlash Pro"
         meta_data.mode = "THz-TDS/Transmission"
 
-        file["Measurement 1"].meta_data = meta_data
+        file["Measurement 1"].set_meta_data(meta_data)
 
         # for thzVer 1.00, we need to transpose the array!
         # important: do not manipulate keys on the `dataset` field, otherwise it won't be written to the file.
@@ -53,34 +53,36 @@ if __name__ == "__main__":
     # create and save a second file
     path2 = Path("test2.thz")
     with DotthzFile(path2, "w") as file:
-        file["Measurement 2"] = DotthzMeasurement()
+        file.create_measurement("Measurement 2")
     del file  # optional, not required as the file is already closed
 
     # open the first file again in append mode and the second in read mode
     with DotthzFile(path1, "a") as file1, DotthzFile(path2) as file2:
-        measurements = file2.measurements
-        for name, measurement in measurements.items():
-            file1[name] = measurement
+        for name, measurement in file2.items():
+            file1[name] = measurement.group
     del file1  # optional, not required as the file is already closed
 
     with DotthzFile(path1, "r") as file1:
         # read the first measurement
-        key = list(file1.measurements.keys())[0]
-        print(file1.measurements.get(key).meta_data)
-        print(file1.measurements.get(key).datasets)
+        key = list(file1.keys())[0]
+        print(file1.get(key).meta_data)
+        print(file1.get(key).datasets)
 
     # read out an image file:
     path3 = Path("tests/test_files/test_image.thz")
     with DotthzFile(path3, "r") as image_file:
         # read the first group/measurement
-        key = list(image_file.measurements.keys())[0]
-        print(image_file.measurements.get(key).meta_data)
-        datasets = image_file.measurements.get(key).datasets
+        key = list(image_file.keys())[0]
+        print(image_file.get(key).meta_data)
+        datasets = image_file.get(key).datasets
         print(datasets.keys())
 
-        # from the first dataset, extract the image:
-        time_trace = datasets["time"]
-        image = datasets["dataset"]
+        # from the first dataset, extract the image,
+        # for that it is essential to use the `np.array()` function to copy the data, since we want to use it outside
+        # of the opened file context. If we would not do this, then `time_trace` and `image` would only be pointers to
+        # a closed file and thus empty.
+        time_trace = np.array(datasets["time"])
+        image = np.array(datasets["dataset"])
 
         # print image dimensions
         print(image.shape)
@@ -89,7 +91,7 @@ if __name__ == "__main__":
     path4 = Path("tests/test_files/test_image_2.thz")
     with DotthzFile(path4, "w") as file:
 
-        file.measurements["Image"] = DotthzMeasurement()
+        file.create_measurement("Image")
 
         # set meta_data
         meta_data = DotthzMetaData()
@@ -108,12 +110,24 @@ if __name__ == "__main__":
         # for (key, value) in info.items():
         #    meta_data.add_field(key, value)
 
-        file.measurements["Image"].meta_data = meta_data
+        file["Image"].set_meta_data(meta_data)
 
         # important: do not manipulate keys on the `dataset` field, otherwise it won't be written to the file.
-        file.measurements["Image"]["time"] = time_trace
-        file.measurements["Image"]["dataset"] = image
+        file["Image"]["time"] = time_trace
+        file["Image"]["dataset"] = image
 
 ```
 
-Requires hdf5 to be installed.
+### Git LFS
+
+This repository uses Git LFS (Large File Storage) to efficiently manage .thz test files.
+Git LFS replaces large files with lightweight pointers in the repository, ensuring the
+repository remains fast and responsive.
+
+1. Install Git LFS: <https://git-lfs.com>
+2. Run `git lfs install` to initialize Git LFS
+3. Run `git lfs pull` to download all files tracked by Git LFS
+
+### Requirements
+
+Requires [hdf5](https://www.hdfgroup.org/solutions/hdf5/) to be installed.
