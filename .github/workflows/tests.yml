@@ -32,13 +32,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install .[dev]  # assumes you have test deps in extras_require
-        pip install pytest
-
-    - name: Print current directory and files
-      run: |
-        pwd
-        ls -R tests/test_files
+        pip install -e .
+        python -m unittest tests.test_dotthz
 
     - name: Run tests
       run: |
-        pytest tests/
+        python tests/
