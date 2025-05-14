@@ -39,9 +39,7 @@ This package will convert said file into the following objects:
 """
 
 from .pydotthz import (DotthzFile,
-                       DotthzMeasurement,
                        DotthzMetaData)
 
 __all__ = [DotthzFile,
-           DotthzMeasurement,
            DotthzMetaData]
