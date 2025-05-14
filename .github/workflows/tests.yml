@@ -34,6 +34,11 @@ jobs:
         pip install .[dev]  # assumes you have test deps in extras_require
         pip install pytest
 
+    - name: Print current directory and files
+      run: |
+        pwd
+        ls -R tests/test_files
+
     - name: Run tests
       run: |
         pytest tests/
