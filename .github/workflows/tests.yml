@@ -19,13 +19,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-      with:
-        lfs: true  # enable LFS support
-
-    - name: Set up Git LFS
-      run: |
-        git lfs install
-        git lfs pull
 
     - name: Check test file validity
       run: |

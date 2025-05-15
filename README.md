@@ -118,16 +118,6 @@ if __name__ == "__main__":
 
 ```
 
-### Git LFS
-
-This repository uses Git LFS (Large File Storage) to efficiently manage .thz test files.
-Git LFS replaces large files with lightweight pointers in the repository, ensuring the
-repository remains fast and responsive.
-
-1. Install Git LFS: <https://git-lfs.com>
-2. Run `git lfs install` to initialize Git LFS
-3. Run `git lfs pull` to download all files tracked by Git LFS
-
 ### Requirements
 
 Requires [hdf5](https://www.hdfgroup.org/solutions/hdf5/) to be installed.
