@@ -286,7 +286,7 @@ class MetadataProxy:
         return f"MetadataProxy({list(self.mapping.keys())})"
 
     def __getitem__(self, key):
-        return self.attrs[self.mapping[key]]
+        return self._sanatize(self.attrs[self.mapping[key]])
 
     def __iter__(self):
         return iter(self.mapping)
