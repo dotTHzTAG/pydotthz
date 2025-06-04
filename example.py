@@ -22,7 +22,9 @@ if __name__ == "__main__":
         file["Measurement 1"].set_meta_data(meta_data)
 
         # for thzVer 1.00, we need to transpose the array!
-        # important: do not manipulate keys on the `dataset` field, otherwise it won't be written to the file.
+
+        # important: do not manipulate keys on the `dataset` field, otherwise
+        # it won't be written to the file.
         file["Measurement 1"]["Sample"] = np.array([time, data]).T
 
     del file  # optional, not required as the file is already closed
@@ -55,9 +57,10 @@ if __name__ == "__main__":
         print(datasets.keys())
 
         # from the first dataset, extract the image,
-        # for that it is essential to use the `np.array()` function to copy the data, since we want to use it outside
-        # of the opened file context. If we would not do this, then `time_trace` and `image` would only be pointers to
-        # a closed file and thus empty.
+        # for that it is essential to use the `np.array()` function to copy
+        # the data, since we want to use it outside of the opened file context.
+        # If we would not do this, then `time_trace` and `image` would only be
+        # pointers to a closed file and thus empty.
         time_trace = np.array(datasets["time"])
         image = np.array(datasets["dataset"])
 
@@ -89,6 +92,7 @@ if __name__ == "__main__":
 
         file["Image"].set_meta_data(meta_data)
 
-        # important: do not manipulate keys on the `dataset` field, otherwise it won't be written to the file.
+        # important: do not manipulate keys on the `dataset` field, otherwise
+        # it won't be written to the file.
         file["Image"]["time"] = time_trace
         file["Image"]["dataset"] = image

@@ -26,14 +26,17 @@ structure:
     |---->Measurement 2
     |...
 
-This package will represent said file as the following a `DotthzFile` object.
-`DotthzFile` is a wrapper for the `Hdf5File` class.
-This class is memory mapped to the file on the disk for quick and efficient data access.
+This package will represent said file as a `DotthzFile` object, which serves
+as a wrapper for the `Hdf5File` class.
+This class is memory mapped to the file on the disk for quick and efficient
+data access.
 Datasets can take any structure but a shape (2, n) array is recommended.
 Metadata/Attributes are also memory mapped and easily accessible for the user.
 
-A `DotthzMetaData` object is optional but can be used for keeping track of the meta-data outside the file context.
-It contains multiple fixed attributes as defined in the .thz standard as well as a dictionary of user defined attributes.
+A `DotthzMetaData` object is optional but can be used for keeping track of the
+meta-data outside the file context.
+It contains multiple fixed attributes as defined in the .thz standard as well
+as a dictionary of user defined attributes.
 
 """
 

@@ -1,14 +1,16 @@
 """
 DotTHz File Interface
 
-This module defines classes and methods to read, write, and manipulate `.thz` files,
-a format for storing terahertz time-domain spectroscopy (THz-TDS) measurements. It
-supports automatic saving, metadata handling, and dataset management using HDF5.
+This module defines classes and methods to read, write, and manipulate `.thz`
+files, a format for storing terahertz time-domain spectroscopy (THz-TDS)
+measurements. It supports automatic saving, metadata handling, and dataset
+management using HDF5.
 
 Classes:
 --------
 - DotthzMetaData: Stores user and measurement metadata.
-- DotthzFile: Handles reading/writing `.thz` files and provides access to stored measurements.
+- DotthzFile: Handles reading/writing `.thz` files and provides access to
+stored measurements.
 
 Dependencies:
 -------------
@@ -30,7 +32,8 @@ warnings.simplefilter("always", DeprecationWarning)
 
 @dataclass
 class DotthzMetaData:
-    """An optional data class holding metadata for measurements in the .thz file format.
+    """An optional data class holding metadata for measurements in the .thz
+    file format.
 
     Attributes
     ----------
@@ -86,14 +89,17 @@ class DotthzMetaData:
 
 class DotthzFile:
     """
-    Interface for reading, writing, and managing measurements in the `.thz` file format.
+    Interface for reading, writing, and managing measurements in the `.thz`
+    file format.
 
-    This class provides persistent storage of THz time-domain spectroscopy data via HDF5.
+    This class provides persistent storage of THz time-domain spectroscopy
+    data via HDF5.
 
     Supports context manager (`with` statement) for automatic file handling.
     """
 
-    def __init__(self, name: Union[str, Path], mode="r", driver=None, libver=None,
+    def __init__(self, name: Union[str, Path], mode="r",
+                 driver=None, libver=None,
                  userblock_size=None, swmr=False, rdcc_nslots=None,
                  rdcc_nbytes=None, rdcc_w0=None, track_order=None,
                  fs_strategy=None, fs_persist=False, fs_threshold=1,
@@ -142,7 +148,9 @@ class DotthzFile:
         """
         Get a view object on member items
         """
-        return ((name, DotthzMeasurementWrapper(group)) for name, group in self.file.items())
+        return ((name, DotthzMeasurementWrapper(group))
+                for name, group
+                in self.file.items())
 
     def keys(self):
         """
@@ -184,8 +192,8 @@ class DotthzFile:
             Use .items() instead.
         """
         warnings.warn(
-            "get_measurements  is deprecated and will be removed in a future version. "
-            "Use .items() instead.",
+            "get_measurements  is deprecated and will be removed "
+            "in a future version. Use .items() instead.",
             DeprecationWarning,
             stacklevel=2
         )
@@ -194,8 +202,8 @@ class DotthzFile:
     @property
     def measurements(self):
         warnings.warn(
-            "measurements is deprecated and will be removed in a future version. "
-            "Use self instead.",
+            "measurements is deprecated and will be removed "
+            "in a future version. Use self instead.",
             DeprecationWarning,
             stacklevel=2
         )
@@ -216,8 +224,8 @@ class DotthzFile:
             Use `file[name]` or `file.get(name)` instead.
         """
         warnings.warn(
-            "get_measurement is deprecated and will be removed in a future version. "
-            "Use file[name] or file.get(name) instead.",
+            "get_measurement is deprecated and will be removed"
+            " in a future version. Use file[name] or file.get(name) instead.",
             DeprecationWarning,
             stacklevel=2
         )
@@ -243,7 +251,8 @@ class DotthzMeasurementWrapper:
         return MetadataProxy(self.group.attrs)
 
     def set_meta_data(self, meta_data: DotthzMetaData):
-        """Sets metadata in the HDF5 group based on the provided DotthzMetaData instance."""
+        """Sets metadata in the HDF5 group based on the provided
+        DotthzMetaData instance."""
 
         # Set general metadata
         self.group.attrs["description"] = meta_data.description
@@ -254,7 +263,11 @@ class DotthzMeasurementWrapper:
         self.group.attrs["version"] = meta_data.version
 
         # Handle user metadata
-        user_info = f"{meta_data.orcid}/{meta_data.user}/{meta_data.email}/{meta_data.institution}"
+        user_info = "/".join((meta_data.orcid,
+                              meta_data.user,
+                              meta_data.email,
+                              meta_data.institution))
+
         self.group.attrs["user"] = user_info
 
         # Set additional metadata fields (md1, md2, etc.)
@@ -276,7 +289,8 @@ class MetadataProxy:
     def __init__(self, attrs):
         self.attrs = attrs
         self.mapping = {
-            alias: f"md{i + 1}" for i, alias in enumerate(self._get_descriptions(attrs.get("mdDescription", [])))
+            alias: f"md{i + 1}" for i, alias in enumerate(
+                self._get_descriptions(attrs.get("mdDescription", [])))
         }
         for attr in attrs:
             if attr != "mdDescription" and not attr.startswith("md"):
@@ -332,7 +346,8 @@ class MetadataProxy:
     def _add_new_md(self, key):
         """Add a new dataset to the 'dsDescription' attribute."""
         # Update the description list with the new dataset
-        md_description = self._get_descriptions(self.attrs.get("mdDescription", []))
+        md_description = self._get_descriptions(self.attrs.get("mdDescription",
+                                                               []))
 
         if key not in md_description:
             md_description.append(key)
@@ -363,7 +378,8 @@ class MetadataProxy:
 
     def get_meta_data_names(self):
         """
-        Return a list of all attributes/meta_data fields of the group as strings.
+        Return a list of all attributes/meta_data fields of the group as
+        strings.
         """
         return [str(name) for name in self.keys()]
 
@@ -391,7 +407,8 @@ class DatasetProxy:
     def __getitem__(self, key):
         """Retrieve the dataset corresponding to the key."""
         if key not in self.mapping:
-            raise KeyError(f"Dataset name '{key}' not found in 'dsDescription'.")
+            raise KeyError(
+                f"Dataset name '{key}' not found in 'dsDescription'.")
         return self.group[self.mapping[key]]
 
     def __setitem__(self, key, value):
@@ -434,13 +451,15 @@ class DatasetProxy:
 
     def _initialize_mapping(self):
         """Initialize or update the mapping for dataset names."""
-        aliases = [alias.strip() for alias in self._get_descriptions(self.group.attrs.get("dsDescription", []))]
+        aliases = [alias.strip() for alias in self._get_descriptions(
+            self.group.attrs.get("dsDescription", []))]
         self.mapping = {alias: f"ds{i + 1}" for i, alias in enumerate(aliases)}
 
     def _add_new_dataset(self, key):
         """Add a new dataset to the 'dsDescription' attribute."""
         # Update the description list with the new dataset
-        ds_description = self._get_descriptions(self.group.attrs.get("dsDescription", []))
+        ds_description = self._get_descriptions(
+            self.group.attrs.get("dsDescription", []))
 
         if key not in ds_description:
             ds_description.append(key)
@@ -454,7 +473,8 @@ class DatasetProxy:
     def get(self, key):
         """Retrieve the dataset corresponding to the key."""
         if key not in self.mapping:
-            raise KeyError(f"Dataset name '{key}' not found in 'dsDescription'.")
+            raise KeyError(
+                f"Dataset name '{key}' not found in 'dsDescription'.")
         return self.group[self.mapping[key]]
 
     def keys(self):
