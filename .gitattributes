@@ -1,1 +1,1 @@
-*.thz filter=lfs diff=lfs merge=lfs -text
+*.thz !text !filter !merge !diff
