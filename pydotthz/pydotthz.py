@@ -131,6 +131,12 @@ class DotthzFile:
             self.file = None
 
     def __getitem__(self, key):
+        # Create a group if it doesn't already exist.
+        if key not in self.keys():
+            self.create_group(key)
+
+        # Return a DotthzMeasurementWrapper for the group
+        return DotthzMeasurementWrapper(self.file[key])
         # Return a DotthzMeasurementWrapper for the group
         return DotthzMeasurementWrapper(self.file[key])
 
