@@ -30,6 +30,7 @@ All notable changes to the `pydotthz` package will be documented in this file.
   structure.
 * `DotTHzMetaData` is only optional if you want to extract the meta-data. It now normally remains as attributes with
   memory mapping attached to the HDF5 file.
+* Renamed `meta_data` to `metadata` for consistency with the rest of the codebase.
 
 ## 0.4.0 - ...
 

@@ -137,8 +137,6 @@ class DotthzFile:
 
         # Return a DotthzMeasurementWrapper for the group
         return DotthzMeasurementWrapper(self.file[key])
-        # Return a DotthzMeasurementWrapper for the group
-        return DotthzMeasurementWrapper(self.file[key])
 
     def __setitem__(self, key, group):
         # group must be an h5py.Group or something copyable
@@ -174,7 +172,16 @@ class DotthzFile:
         """
         create a new measurement / group in the `.thz` file.
         :param name:
+
+        .. deprecated:: 1.0.0
+            Use .items() instead.
         """
+        warnings.warn(
+            "create_measurement  is deprecated and will be removed "
+            "in a future version. Use file[measurement_name] instead. If the measurement does not exist, it will be created.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         return self.create_group(name)
 
     def create_group(self, name: str):
@@ -250,38 +257,38 @@ class DotthzMeasurementWrapper:
         return DatasetProxy(self.group)
 
     @property
-    def meta_data(self):
+    def metadata(self):
         """
         Memory-mapped HDF5 Attributes / Metadata
         """
         return MetadataProxy(self.group.attrs)
 
-    def set_meta_data(self, meta_data: DotthzMetaData):
+    def set_metadata(self, metadata: DotthzMetaData):
         """Sets metadata in the HDF5 group based on the provided
         DotthzMetaData instance."""
 
         # Set general metadata
-        self.group.attrs["description"] = meta_data.description
-        self.group.attrs["mode"] = meta_data.mode
-        self.group.attrs["instrument"] = meta_data.instrument
-        self.group.attrs["time"] = meta_data.time
-        self.group.attrs["date"] = meta_data.date
-        self.group.attrs["version"] = meta_data.version
+        self.group.attrs["description"] = metadata.description
+        self.group.attrs["mode"] = metadata.mode
+        self.group.attrs["instrument"] = metadata.instrument
+        self.group.attrs["time"] = metadata.time
+        self.group.attrs["date"] = metadata.date
+        self.group.attrs["version"] = metadata.version
 
         # Handle user metadata
-        user_info = "/".join((meta_data.orcid,
-                              meta_data.user,
-                              meta_data.email,
-                              meta_data.institution))
+        user_info = "/".join((metadata.orcid,
+                              metadata.user,
+                              metadata.email,
+                              metadata.institution))
 
         self.group.attrs["user"] = user_info
 
         # Set additional metadata fields (md1, md2, etc.)
-        for key, value in meta_data.md.items():
+        for key, value in metadata.md.items():
             self.group.attrs[key] = value
 
         # Optionally, add "mdDescription" to describe which fields are included
-        md_description = ",".join(meta_data.md.keys())
+        md_description = ",".join(metadata.md.keys())
         self.group.attrs["mdDescription"] = md_description
 
     def __getitem__(self, key):
@@ -382,9 +389,9 @@ class MetadataProxy:
         """
         return (self.attrs[v] for v in self.mapping.values())
 
-    def get_meta_data_names(self):
+    def get_metadata_names(self):
         """
-        Return a list of all attributes/meta_data fields of the group as
+        Return a list of all attributes/metadata fields of the group as
         strings.
         """
         return [str(name) for name in self.keys()]
@@ -495,7 +502,7 @@ class DatasetProxy:
         """Return the dataset values."""
         return (self.group[v] for v in self.mapping.values())
 
-    def get_meta_data_names(self):
+    def get_dataset_names(self):
         """
         Return a list of all dataset names of the group as strings.
         """

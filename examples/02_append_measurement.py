@@ -13,18 +13,15 @@ if __name__ == "__main__":
         file.create_measurement("Measurement 1")
 
         # create meta-data
-        meta_data = DotthzMetaData()
-        meta_data.user = "John Doe"
-        meta_data.version = "1.00"
-        meta_data.instrument = "Toptica TeraFlash Pro"
-        meta_data.mode = "THz-TDS/Transmission"
+        metadata = DotthzMetaData()
+        metadata.user = "John Doe"
+        metadata.version = "1.00"
+        metadata.instrument = "Toptica TeraFlash Pro"
+        metadata.mode = "THz-TDS/Transmission"
 
-        file["Measurement 1"].set_meta_data(meta_data)
+        file["Measurement 1"].set_metadata(metadata)
 
         # for thzVer 1.00, we need to transpose the array!
-
-        # important: do not manipulate keys on the `dataset` field, otherwise
-        # it won't be written to the file.
         file["Measurement 1"]["Sample"] = np.array([time, data]).T
 
     del file  # optional, not required as the file is already closed
@@ -32,7 +29,7 @@ if __name__ == "__main__":
     # create and save a second file
     path2 = Path("test2.thz")
     with DotthzFile(path2, "w") as file:
-        file.create_measurement("Measurement 2")
+        file["Measurement 1"]["Sample"] = np.array([time, data]).T
     del file  # optional, not required as the file is already closed
 
     # open the first file again in append mode and the second in read mode
@@ -44,5 +41,13 @@ if __name__ == "__main__":
     with DotthzFile(path1, "r") as file1:
         # read the first measurement
         key = list(file1.keys())[0]
-        print(file1.get(key).meta_data)
+        print(file1.get(key).metadata)
         print(file1.get(key).datasets)
+
+        # for that it is essential to use the `np.array()` function to copy
+        # the data, since we want to use it outside of the opened file context.
+        # If we would not do this, then `time_trace` and `pulse_trace` would only be
+        # pointers to a closed file and thus empty.
+
+        time = np.array(file1.get(key).datasets["Sample"])[:, 0]
+        pulse_trace = np.array(file1.get(key).datasets["Sample"])[:, 1]

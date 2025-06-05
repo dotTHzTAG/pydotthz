@@ -9,7 +9,7 @@ if __name__ == "__main__":
     with DotthzFile(image_path_1, "r") as image_file:
         # read the first group/measurement
         key = list(image_file.keys())[0]
-        print(image_file.get(key).meta_data)
+        print(image_file.get(key).metadata)
         datasets = image_file.get(key).datasets
         print(datasets.keys())
 
@@ -30,24 +30,24 @@ if __name__ == "__main__":
 
         file.create_measurement("Image")
 
-        # set meta_data
-        meta_data = DotthzMetaData()
-        meta_data.user = "John Doe"
-        meta_data.email = "john.doe@unibe.ch"
-        meta_data.institution = "University of Bern"
-        meta_data.orcid = "ORCID"
-        meta_data.description = "some comment"
-        meta_data.date = "date"
-        meta_data.time = "time"
-        meta_data.version = "1.10"
-        meta_data.instrument = "Toptica TeraFlash Pro"
-        meta_data.mode = "THz-TDS/Transmission"
+        # set metadata
+        metadata = DotthzMetaData()
+        metadata.user = "John Doe"
+        metadata.email = "john.doe@unibe.ch"
+        metadata.institution = "University of Bern"
+        metadata.orcid = "ORCID"
+        metadata.description = "some comment"
+        metadata.date = "date"
+        metadata.time = "time"
+        metadata.version = "1.10"
+        metadata.instrument = "Toptica TeraFlash Pro"
+        metadata.mode = "THz-TDS/Transmission"
 
         # add more keys from your "info" dictionary ...
         # for (key, value) in info.items():
-        #    meta_data.add_field(key, value)
+        #    metadata.add_field(key, value)
 
-        file["Image"].set_meta_data(meta_data)
+        file["Image"].set_metadata(metadata)
 
         # important: do not manipulate keys on the `dataset` field, otherwise
         # it won't be written to the file.

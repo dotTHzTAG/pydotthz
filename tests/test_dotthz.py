@@ -33,14 +33,14 @@ class TestDotthzFile(unittest.TestCase):
                     self.assertIsNotNone(copied_measurement)
 
                     # Compare metadata fields
-                    self.assertEqual(original_measurement.meta_data["user"], copied_measurement.meta_data["user"])
-                    self.assertEqual(original_measurement.meta_data["description"],
-                                     copied_measurement.meta_data["description"])
-                    self.assertEqual(original_measurement.meta_data["thzVer"], copied_measurement.meta_data["thzVer"])
-                    self.assertEqual(original_measurement.meta_data["mode"], copied_measurement.meta_data["mode"])
-                    self.assertEqual(original_measurement.meta_data["instrument"],
-                                     copied_measurement.meta_data["instrument"])
-                    self.assertEqual(original_measurement.meta_data["time"], copied_measurement.meta_data["time"])
+                    self.assertEqual(original_measurement.metadata["user"], copied_measurement.metadata["user"])
+                    self.assertEqual(original_measurement.metadata["description"],
+                                     copied_measurement.metadata["description"])
+                    self.assertEqual(original_measurement.metadata["thzVer"], copied_measurement.metadata["thzVer"])
+                    self.assertEqual(original_measurement.metadata["mode"], copied_measurement.metadata["mode"])
+                    self.assertEqual(original_measurement.metadata["instrument"],
+                                     copied_measurement.metadata["instrument"])
+                    self.assertEqual(original_measurement.metadata["time"], copied_measurement.metadata["time"])
 
                     # Compare datasets
                     self.assertEqual(len(original_measurement.datasets), len(copied_measurement.datasets))
@@ -64,7 +64,7 @@ class TestDotthzFile(unittest.TestCase):
         # create deep copy
         original_datasets = {key: val for key, val in datasets.items()}
 
-        meta_data = DotthzMetaData(
+        metadata = DotthzMetaData(
             user="Test User",
             email="test@example.com",
             orcid="0000-0001-2345-6789",
@@ -80,8 +80,7 @@ class TestDotthzFile(unittest.TestCase):
 
         with DotthzFile(path, "w") as file_to_write:
             # test writing measurement by measurement
-            file_to_write.create_measurement("Measurement 1")
-            file_to_write["Measurement 1"].set_meta_data(meta_data)
+            file_to_write["Measurement 1"].set_metadata(metadata)
             file_to_write["Measurement 1"]["ds1"] = datasets["ds1"]
 
         # Load from the temporary file
@@ -93,11 +92,11 @@ class TestDotthzFile(unittest.TestCase):
             self.assertIsNotNone(loaded_measurement)
 
             # Compare metadata fields
-            self.assertEqual(meta_data.description, loaded_measurement.meta_data["description"])
-            self.assertEqual(meta_data.version, loaded_measurement.meta_data["version"])
-            self.assertEqual(meta_data.mode, loaded_measurement.meta_data["mode"])
-            self.assertEqual(meta_data.instrument, loaded_measurement.meta_data["instrument"])
-            self.assertEqual(meta_data.time, loaded_measurement.meta_data["time"])
+            self.assertEqual(metadata.description, loaded_measurement.metadata["description"])
+            self.assertEqual(metadata.version, loaded_measurement.metadata["version"])
+            self.assertEqual(metadata.mode, loaded_measurement.metadata["mode"])
+            self.assertEqual(metadata.instrument, loaded_measurement.metadata["instrument"])
+            self.assertEqual(metadata.time, loaded_measurement.metadata["time"])
 
             # Compare datasets
             self.assertEqual(len(original_datasets), len(loaded_measurement.datasets))
@@ -121,7 +120,7 @@ class TestDotthzFile(unittest.TestCase):
         # create deep copy
         original_datasets = {key: val for key, val in datasets.items()}
 
-        meta_data = DotthzMetaData(
+        metadata = DotthzMetaData(
             user="Test User",
             email="test@example.com",
             orcid="0000-0001-2345-6789",
@@ -137,8 +136,7 @@ class TestDotthzFile(unittest.TestCase):
 
         with DotthzFile(path, "w") as file_to_write:
             # test writing measurement by measurement
-            file_to_write.create_measurement("Measurement 1")
-            file_to_write["Measurement 1"].set_meta_data(meta_data)
+            file_to_write["Measurement 1"].set_metadata(metadata)
             file_to_write["Measurement 1"]["ds1"] = datasets["ds1"]
 
         # Load from the temporary file
@@ -150,11 +148,11 @@ class TestDotthzFile(unittest.TestCase):
             self.assertIsNotNone(loaded_measurement)
 
             # Compare metadata fields
-            self.assertEqual(meta_data.description, loaded_measurement.meta_data["description"])
-            self.assertEqual(meta_data.version, loaded_measurement.meta_data["version"])
-            self.assertEqual(meta_data.mode, loaded_measurement.meta_data["mode"])
-            self.assertEqual(meta_data.instrument, loaded_measurement.meta_data["instrument"])
-            self.assertEqual(meta_data.time, loaded_measurement.meta_data["time"])
+            self.assertEqual(metadata.description, loaded_measurement.metadata["description"])
+            self.assertEqual(metadata.version, loaded_measurement.metadata["version"])
+            self.assertEqual(metadata.mode, loaded_measurement.metadata["mode"])
+            self.assertEqual(metadata.instrument, loaded_measurement.metadata["instrument"])
+            self.assertEqual(metadata.time, loaded_measurement.metadata["time"])
 
             # Compare datasets
             self.assertEqual(len(original_datasets), len(loaded_measurement.datasets))
@@ -171,7 +169,7 @@ class TestDotthzFile(unittest.TestCase):
             path = temp_file.name
 
         # Initialize test data for Dotthz
-        meta_data = DotthzMetaData(
+        metadata = DotthzMetaData(
             user="Test User",
             email="test@example.com",
             orcid="0000-0001-2345-6789",
@@ -186,8 +184,7 @@ class TestDotthzFile(unittest.TestCase):
         )
 
         with DotthzFile(path, "w") as file_to_write:
-            file_to_write.create_measurement("Measurement 1")
-            file_to_write["Measurement 1"].set_meta_data(meta_data)
+            file_to_write["Measurement 1"].set_metadata(metadata)
             file_to_write["Measurement 1"]["ds1"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
             file_to_write["Measurement 1"]["ds1"][0, 0] = 0.0
 
@@ -202,11 +199,11 @@ class TestDotthzFile(unittest.TestCase):
             self.assertIsNotNone(loaded_measurement)
 
             # Compare metadata fields
-            self.assertEqual(meta_data.description, loaded_measurement.meta_data["description"])
-            self.assertEqual(meta_data.version, loaded_measurement.meta_data["version"])
-            self.assertEqual(meta_data.mode, loaded_measurement.meta_data["mode"])
-            self.assertEqual(meta_data.instrument, loaded_measurement.meta_data["instrument"])
-            self.assertEqual(meta_data.time, loaded_measurement.meta_data["time"])
+            self.assertEqual(metadata.description, loaded_measurement.metadata["description"])
+            self.assertEqual(metadata.version, loaded_measurement.metadata["version"])
+            self.assertEqual(metadata.mode, loaded_measurement.metadata["mode"])
+            self.assertEqual(metadata.instrument, loaded_measurement.metadata["instrument"])
+            self.assertEqual(metadata.time, loaded_measurement.metadata["time"])
 
             # Compare datasets
             self.assertEqual(1, len(loaded_measurement.datasets))
@@ -225,7 +222,7 @@ class TestDotthzFile(unittest.TestCase):
 
         # Initialize test data for Dotthz
 
-        meta_data = DotthzMetaData(
+        metadata = DotthzMetaData(
             user="Test User",
             email="test@example.com",
             orcid="0000-0001-2345-6789",
@@ -240,14 +237,12 @@ class TestDotthzFile(unittest.TestCase):
         )
 
         with DotthzFile(path, "w") as file_to_write:
-            file_to_write.create_measurement("Measurement 1")
-            file_to_write["Measurement 1"].set_meta_data(meta_data)
+            file_to_write["Measurement 1"].set_metadata(metadata)
             file_to_write["Measurement 1"]["ds1"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
             file_to_write["Measurement 1"]["ds2"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
 
         with DotthzFile(path, "r+") as file_to_extend:
-            file_to_extend.create_measurement("Measurement 2")
-            file_to_extend["Measurement 2"].set_meta_data(meta_data)
+            file_to_extend["Measurement 2"].set_metadata(metadata)
             file_to_extend["Measurement 2"]["ds1"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
             file_to_extend["Measurement 2"]["ds2"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
 
@@ -260,11 +255,11 @@ class TestDotthzFile(unittest.TestCase):
                 self.assertIsNotNone(loaded_measurement)
 
                 # Compare metadata fields
-                self.assertEqual(meta_data.description, loaded_measurement.meta_data["description"])
-                self.assertEqual(meta_data.version, loaded_measurement.meta_data["version"])
-                self.assertEqual(meta_data.mode, loaded_measurement.meta_data["mode"])
-                self.assertEqual(meta_data.instrument, loaded_measurement.meta_data["instrument"])
-                self.assertEqual(meta_data.time, loaded_measurement.meta_data["time"])
+                self.assertEqual(metadata.description, loaded_measurement.metadata["description"])
+                self.assertEqual(metadata.version, loaded_measurement.metadata["version"])
+                self.assertEqual(metadata.mode, loaded_measurement.metadata["mode"])
+                self.assertEqual(metadata.instrument, loaded_measurement.metadata["instrument"])
+                self.assertEqual(metadata.time, loaded_measurement.metadata["time"])
 
                 # Compare datasets
                 self.assertEqual(2, len(loaded_measurement.datasets))
@@ -283,7 +278,7 @@ class TestDotthzFile(unittest.TestCase):
 
         # Initialize test data for Dotthz
 
-        meta_data = DotthzMetaData(
+        metadata = DotthzMetaData(
             user="Test User",
             email="test@example.com",
             orcid="0000-0001-2345-6789",
@@ -298,8 +293,7 @@ class TestDotthzFile(unittest.TestCase):
         )
 
         with DotthzFile(path, "w") as file_to_write:
-            file_to_write.create_measurement("Measurement 1")
-            file_to_write["Measurement 1"].set_meta_data(meta_data)
+            file_to_write["Measurement 1"].set_metadata(metadata)
             file_to_write["Measurement 1"]["ds1"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
             file_to_write["Measurement 1"]["ds2"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
 
@@ -315,11 +309,11 @@ class TestDotthzFile(unittest.TestCase):
             self.assertIsNotNone(loaded_measurement)
 
             # Compare metadata fields
-            self.assertEqual(meta_data.description, loaded_measurement.meta_data["description"])
-            self.assertEqual(meta_data.version, loaded_measurement.meta_data["version"])
-            self.assertEqual(meta_data.mode, loaded_measurement.meta_data["mode"])
-            self.assertEqual(meta_data.instrument, loaded_measurement.meta_data["instrument"])
-            self.assertEqual(meta_data.time, loaded_measurement.meta_data["time"])
+            self.assertEqual(metadata.description, loaded_measurement.metadata["description"])
+            self.assertEqual(metadata.version, loaded_measurement.metadata["version"])
+            self.assertEqual(metadata.mode, loaded_measurement.metadata["mode"])
+            self.assertEqual(metadata.instrument, loaded_measurement.metadata["instrument"])
+            self.assertEqual(metadata.time, loaded_measurement.metadata["time"])
 
             # Compare datasets
             self.assertEqual(3, len(loaded_measurement.datasets))
@@ -331,13 +325,13 @@ class TestDotthzFile(unittest.TestCase):
         # Clean up temporary file
         os.remove(path)
 
-    def test_dotthz_extend_existing_measurement_with_existing_meta_data_attribute(self):
+    def test_dotthz_extend_existing_measurement_with_existing_metadata_attribute(self):
         with NamedTemporaryFile(delete=False) as temp_file:
             path = temp_file.name
 
         # Initialize test data for Dotthz
 
-        meta_data = DotthzMetaData(
+        metadata = DotthzMetaData(
             user="Test User",
             email="test@example.com",
             orcid="0000-0001-2345-6789",
@@ -352,13 +346,12 @@ class TestDotthzFile(unittest.TestCase):
         )
 
         with DotthzFile(path, "w") as file_to_write:
-            file_to_write.create_measurement("Measurement 1")
-            file_to_write["Measurement 1"].set_meta_data(meta_data)
+            file_to_write["Measurement 1"].set_metadata(metadata)
             file_to_write["Measurement 1"]["ds1"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
             file_to_write["Measurement 1"]["ds2"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
 
         with DotthzFile(path, "r+") as file_to_extend:
-            file_to_extend["Measurement 1"].meta_data["mode"] = "New Mode"
+            file_to_extend["Measurement 1"].metadata["mode"] = "New Mode"
 
         # Load from the temporary file
         with DotthzFile(path) as loaded_file:
@@ -369,11 +362,11 @@ class TestDotthzFile(unittest.TestCase):
             self.assertIsNotNone(loaded_measurement)
 
             # Compare metadata fields
-            self.assertEqual(meta_data.description, loaded_measurement.meta_data["description"])
-            self.assertEqual(meta_data.version, loaded_measurement.meta_data["version"])
-            self.assertEqual("New Mode", loaded_measurement.meta_data["mode"])
-            self.assertEqual(meta_data.instrument, loaded_measurement.meta_data["instrument"])
-            self.assertEqual(meta_data.time, loaded_measurement.meta_data["time"])
+            self.assertEqual(metadata.description, loaded_measurement.metadata["description"])
+            self.assertEqual(metadata.version, loaded_measurement.metadata["version"])
+            self.assertEqual("New Mode", loaded_measurement.metadata["mode"])
+            self.assertEqual(metadata.instrument, loaded_measurement.metadata["instrument"])
+            self.assertEqual(metadata.time, loaded_measurement.metadata["time"])
 
             # Compare datasets
             self.assertEqual(2, len(loaded_measurement.datasets))
@@ -385,13 +378,13 @@ class TestDotthzFile(unittest.TestCase):
         # Clean up temporary file
         os.remove(path)
 
-    def test_dotthz_extend_existing_measurement_with_new_meta_data_attribute(self):
+    def test_dotthz_extend_existing_measurement_with_new_metadata_attribute(self):
         with NamedTemporaryFile(delete=False) as temp_file:
             path = temp_file.name
 
         # Initialize test data for Dotthz
 
-        meta_data = DotthzMetaData(
+        metadata = DotthzMetaData(
             user="Test User",
             email="test@example.com",
             orcid="0000-0001-2345-6789",
@@ -406,13 +399,12 @@ class TestDotthzFile(unittest.TestCase):
         )
 
         with DotthzFile(path, "w") as file_to_write:
-            file_to_write.create_measurement("Measurement 1")
-            file_to_write["Measurement 1"].set_meta_data(meta_data)
+            file_to_write["Measurement 1"].set_metadata(metadata)
             file_to_write["Measurement 1"]["ds1"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
             file_to_write["Measurement 1"]["ds2"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
 
         with DotthzFile(path, "r+") as file_to_extend:
-            file_to_extend["Measurement 1"].meta_data["new meta data"] = "Test"
+            file_to_extend["Measurement 1"].metadata["new meta data"] = "Test"
 
         # Load from the temporary file
         with DotthzFile(path) as loaded_file:
@@ -423,12 +415,12 @@ class TestDotthzFile(unittest.TestCase):
             self.assertIsNotNone(loaded_measurement)
 
             # Compare metadata fields
-            self.assertEqual(meta_data.description, loaded_measurement.meta_data["description"])
-            self.assertEqual(meta_data.version, loaded_measurement.meta_data["version"])
-            self.assertEqual(meta_data.mode, loaded_measurement.meta_data["mode"])
-            self.assertEqual(meta_data.instrument, loaded_measurement.meta_data["instrument"])
-            self.assertEqual(meta_data.time, loaded_measurement.meta_data["time"])
-            self.assertEqual("Test", loaded_measurement.meta_data["new meta data"])
+            self.assertEqual(metadata.description, loaded_measurement.metadata["description"])
+            self.assertEqual(metadata.version, loaded_measurement.metadata["version"])
+            self.assertEqual(metadata.mode, loaded_measurement.metadata["mode"])
+            self.assertEqual(metadata.instrument, loaded_measurement.metadata["instrument"])
+            self.assertEqual(metadata.time, loaded_measurement.metadata["time"])
+            self.assertEqual("Test", loaded_measurement.metadata["new meta data"])
 
             # Compare datasets
             self.assertEqual(2, len(loaded_measurement.datasets))
