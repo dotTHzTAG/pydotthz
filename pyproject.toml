@@ -7,7 +7,7 @@ packages = ["pydotthz"]
 
 [project]
 name = "pydotthz"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
   { name="Linus Leo Stöckli", email="linus.stoeckli@unibe.ch" },
   { name="Jasper Nelson Ward-Berry", email="jnw35@cam.ac.uk" },
