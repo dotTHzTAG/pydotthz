@@ -4,7 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/v/pydotthz?label=pypi%20package)](https://pypi.org/project/pydotthz/)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/pydotthz)](https://pypi.org/project/pydotthz/)
 
-This crate provides an easy way to interface with [dotTHz](https://github.com/dotTHzTAG) files in Python.
+This library provides an easy way to interface with [dotTHz](https://github.com/dotTHzTAG) files in Python.
 
 Install it
 
