@@ -276,16 +276,17 @@ class DotthzMeasurementWrapper:
         self.group.attrs["version"] = metadata.version
 
         # Handle user metadata
-        user_info = "/".join((metadata.orcid,
-                              metadata.user,
-                              metadata.email,
-                              metadata.institution))
+        user_info = "/".join(x or "" for x in (
+            metadata.orcid,
+            metadata.user,
+            metadata.email,
+            metadata.institution))
 
         self.group.attrs["user"] = user_info
 
         # Set additional metadata fields (md1, md2, etc.)
-        for key, value in metadata.md.items():
-            self.group.attrs[key] = value
+        for i, (key, value) in enumerate(metadata.md.items(), start=1):
+            self.group.attrs[f"md{i}"] = value
 
         # Optionally, add "mdDescription" to describe which fields are included
         md_description = ",".join(metadata.md.keys())
