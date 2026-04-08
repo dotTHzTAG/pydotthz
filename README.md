@@ -33,7 +33,6 @@ if __name__ == "__main__":
     # save the file
     path1 = Path("test1.thz")
     with DotthzFile(path1, "w") as file:
-        file.create_measurement("Measurement 1")
 
         # create meta-data
         metadata = DotthzMetaData()
