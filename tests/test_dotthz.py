@@ -272,6 +272,51 @@ class TestDotthzFile(unittest.TestCase):
         # Clean up temporary file
         os.remove(path)
 
+    def test_dotthz_rplus_file_and_group_equality(self):
+        with NamedTemporaryFile(delete=False) as temp_file:
+            path = temp_file.name
+
+        metadata = DotthzMetaData(
+            user="Test User",
+            email="test@example.com",
+            orcid="0000-0001-2345-6789",
+            institution="Test Institute",
+            description="Test description",
+            md={"md1": "Thickness (mm)"},
+            version="1.00",
+            mode="Test mode",
+            instrument="Test instrument",
+            time="12:34:56",
+            date="2024-11-08"
+        )
+
+        expected_groups = ["Measurement 1", "Measurement 2"]
+        expected_datasets = {
+            "Measurement 1": ["ds1", "ds2"],
+            "Measurement 2": ["ds1", "ds2", "ds3"],
+        }
+
+        with DotthzFile(path, "w") as file_to_write:
+            file_to_write["Measurement 1"].set_metadata(metadata)
+            file_to_write["Measurement 1"]["ds1"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
+            file_to_write["Measurement 1"]["ds2"] = np.array([[5.0, 6.0], [7.0, 8.0]], dtype=np.float32)
+
+        with DotthzFile(path, "r+") as file_to_extend:
+            file_to_extend["Measurement 2"].set_metadata(metadata)
+            file_to_extend["Measurement 2"]["ds1"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
+            file_to_extend["Measurement 2"]["ds2"] = np.array([[5.0, 6.0], [7.0, 8.0]], dtype=np.float32)
+            file_to_extend["Measurement 2"]["ds3"] = np.array([[9.0, 10.0], [11.0, 12.0]], dtype=np.float32)
+
+        with DotthzFile(path, "r+") as file:
+            self.assertEqual(expected_groups, list(file))
+            self.assertEqual(file, expected_groups)
+
+            for group_name, datasets in expected_datasets.items():
+                self.assertEqual(datasets, list(file[group_name].datasets))
+                self.assertEqual(file[group_name], datasets)
+
+        os.remove(path)
+
     def test_dotthz_extend_existing_measurement_with_dataset(self):
         with NamedTemporaryFile(delete=False) as temp_file:
             path = temp_file.name

@@ -148,6 +148,21 @@ class DotthzFile:
     def __len__(self):
         return len(self.file)
 
+    def __eq__(self, other):
+        if isinstance(other, DotthzFile):
+            return list(self.keys()) == list(other.keys())
+        if isinstance(other, Iterable) and not isinstance(other, (str, bytes)):
+            return list(self.keys()) == list(other)
+        return NotImplemented
+
+    def __str__(self):
+        if self.file is None:
+            return "DotthzFile(closed)"
+        return f"DotthzFile(measurements={list(self.keys())})"
+
+    def __repr__(self):
+        return self.__str__()
+
     def items(self):
         """
         Get a view object on member items
@@ -296,6 +311,21 @@ class DotthzMeasurementWrapper:
 
     def __setitem__(self, key, value):
         self.datasets[key] = value
+
+    def __eq__(self, other):
+        if isinstance(other, DotthzMeasurementWrapper):
+            return list(self.datasets.keys()) == list(other.datasets.keys())
+        if isinstance(other, Iterable) and not isinstance(other, (str, bytes)):
+            return list(self.datasets.keys()) == list(other)
+        return NotImplemented
+
+    def __str__(self):
+        if self.group is None:
+            return "DotthzMeasurementWrapper(closed)"
+        return f"DotthzMeasurementWrapper(datasets={list(self.datasets.keys())})"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class MetadataProxy:
