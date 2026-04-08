@@ -42,6 +42,8 @@ if __name__ == "__main__":
         metadata.instrument = "Toptica TeraFlash Pro"
         metadata.mode = "THz-TDS/Transmission"
 
+        metadata.add_field("thickness_mm", 0.52)
+
         file["Measurement 1"].set_metadata(metadata)
 
         # for thzVer 1.00, we need to transpose the array!

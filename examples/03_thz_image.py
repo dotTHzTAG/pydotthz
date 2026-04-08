@@ -28,8 +28,6 @@ if __name__ == "__main__":
     image_path_2 = Path("../tests/test_files/test_image_2.thz")
     with DotthzFile(image_path_2, "w") as file:
 
-        file.create_measurement("Image")
-
         # set metadata
         metadata = DotthzMetaData()
         metadata.user = "John Doe"

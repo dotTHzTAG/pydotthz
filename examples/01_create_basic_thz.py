@@ -10,7 +10,6 @@ if __name__ == "__main__":
     # save the file
     path1 = Path("test1.thz")
     with DotthzFile(path1, "w") as file:
-        file.create_measurement("Measurement 1")
 
         # create metadata
         metadata = DotthzMetaData()
@@ -18,6 +17,11 @@ if __name__ == "__main__":
         metadata.version = "1.00"
         metadata.instrument = "Toptica TeraFlash Pro"
         metadata.mode = "THz-TDS/Transmission"
+        info = {
+            "thickness_mm": 0.52,
+        }
+        for key, value in info.items():
+            metadata.add_field(key, value)
 
         file["Measurement 1"].set_metadata(metadata)
 

@@ -8,6 +8,27 @@ import os
 
 class TestDotthzFile(unittest.TestCase):
 
+    @staticmethod
+    def _create_metadata():
+        metadata = DotthzMetaData(
+            user="Test User",
+            email="test@example.com",
+            orcid="0000-0001-2345-6789",
+            institution="Test Institute",
+            description="Test description",
+            version="1.00",
+            mode="Test mode",
+            instrument="Test instrument",
+            time="12:34:56",
+            date="2024-11-08"
+        )
+        info = {
+            "thickness_mm": 0.52,
+        }
+        for key, value in info.items():
+            metadata.add_field(key, value)
+        return metadata
+
     def test_copy_and_compare_dotthz_files(self):
         root = Path(__file__).resolve().parent
         paths = [root / "test_files" / "PVDF_520um.thz", root / "test_files" / "2_VariableTemperature.thz"]
@@ -64,19 +85,7 @@ class TestDotthzFile(unittest.TestCase):
         # create deep copy
         original_datasets = {key: val for key, val in datasets.items()}
 
-        metadata = DotthzMetaData(
-            user="Test User",
-            email="test@example.com",
-            orcid="0000-0001-2345-6789",
-            institution="Test Institute",
-            description="Test description",
-            md={"md1": "Thickness (mm)"},
-            version="1.00",
-            mode="Test mode",
-            instrument="Test instrument",
-            time="12:34:56",
-            date="2024-11-08"
-        )
+        metadata = self._create_metadata()
 
         with DotthzFile(path, "w") as file_to_write:
             # test writing measurement by measurement
@@ -120,19 +129,7 @@ class TestDotthzFile(unittest.TestCase):
         # create deep copy
         original_datasets = {key: val for key, val in datasets.items()}
 
-        metadata = DotthzMetaData(
-            user="Test User",
-            email="test@example.com",
-            orcid="0000-0001-2345-6789",
-            institution="Test Institute",
-            description="Test description",
-            md={"md1": "Thickness (mm)"},
-            version="1.00",
-            mode="Test mode",
-            instrument="Test instrument",
-            time="12:34:56",
-            date="2024-11-08"
-        )
+        metadata = self._create_metadata()
 
         with DotthzFile(path, "w") as file_to_write:
             # test writing measurement by measurement
@@ -169,19 +166,7 @@ class TestDotthzFile(unittest.TestCase):
             path = temp_file.name
 
         # Initialize test data for Dotthz
-        metadata = DotthzMetaData(
-            user="Test User",
-            email="test@example.com",
-            orcid="0000-0001-2345-6789",
-            institution="Test Institute",
-            description="Test description",
-            md={"md1": "Thickness (mm)"},
-            version="1.00",
-            mode="Test mode",
-            instrument="Test instrument",
-            time="12:34:56",
-            date="2024-11-08"
-        )
+        metadata = self._create_metadata()
 
         with DotthzFile(path, "w") as file_to_write:
             file_to_write["Measurement 1"].set_metadata(metadata)
@@ -222,19 +207,7 @@ class TestDotthzFile(unittest.TestCase):
 
         # Initialize test data for Dotthz
 
-        metadata = DotthzMetaData(
-            user="Test User",
-            email="test@example.com",
-            orcid="0000-0001-2345-6789",
-            institution="Test Institute",
-            description="Test description",
-            md={"md1": "Thickness (mm)"},
-            version="1.00",
-            mode="Test mode",
-            instrument="Test instrument",
-            time="12:34:56",
-            date="2024-11-08"
-        )
+        metadata = self._create_metadata()
 
         with DotthzFile(path, "w") as file_to_write:
             file_to_write["Measurement 1"].set_metadata(metadata)
@@ -272,23 +245,40 @@ class TestDotthzFile(unittest.TestCase):
         # Clean up temporary file
         os.remove(path)
 
+    def test_dotthz_setitem_replaces_existing_measurement(self):
+        with NamedTemporaryFile(delete=False) as temp_file_1, NamedTemporaryFile(delete=False) as temp_file_2:
+            path_1 = temp_file_1.name
+            path_2 = temp_file_2.name
+
+        metadata = self._create_metadata()
+
+        with DotthzFile(path_1, "w") as file_1:
+            file_1["Measurement 1"].set_metadata(metadata)
+            file_1["Measurement 1"]["Sample"] = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
+
+        with DotthzFile(path_2, "w") as file_2:
+            file_2["Measurement 1"].set_metadata(metadata)
+            file_2["Measurement 1"]["Sample"] = np.array([[5.0, 6.0], [7.0, 8.0]], dtype=np.float32)
+
+        with DotthzFile(path_1, "a") as file_1, DotthzFile(path_2, "r") as file_2:
+            for name, measurement in file_2.items():
+                file_1[name] = measurement.group
+
+        with DotthzFile(path_1, "r") as loaded_file:
+            self.assertEqual(["Measurement 1"], list(loaded_file))
+            np.testing.assert_array_equal(
+                np.array([[5.0, 6.0], [7.0, 8.0]], dtype=np.float32),
+                np.array(loaded_file["Measurement 1"]["Sample"])
+            )
+
+        os.remove(path_1)
+        os.remove(path_2)
+
     def test_dotthz_rplus_file_and_group_equality(self):
         with NamedTemporaryFile(delete=False) as temp_file:
             path = temp_file.name
 
-        metadata = DotthzMetaData(
-            user="Test User",
-            email="test@example.com",
-            orcid="0000-0001-2345-6789",
-            institution="Test Institute",
-            description="Test description",
-            md={"md1": "Thickness (mm)"},
-            version="1.00",
-            mode="Test mode",
-            instrument="Test instrument",
-            time="12:34:56",
-            date="2024-11-08"
-        )
+        metadata = self._create_metadata()
 
         expected_groups = ["Measurement 1", "Measurement 2"]
         expected_datasets = {
@@ -323,19 +313,7 @@ class TestDotthzFile(unittest.TestCase):
 
         # Initialize test data for Dotthz
 
-        metadata = DotthzMetaData(
-            user="Test User",
-            email="test@example.com",
-            orcid="0000-0001-2345-6789",
-            institution="Test Institute",
-            description="Test description",
-            md={"md1": "Thickness (mm)"},
-            version="1.00",
-            mode="Test mode",
-            instrument="Test instrument",
-            time="12:34:56",
-            date="2024-11-08"
-        )
+        metadata = self._create_metadata()
 
         with DotthzFile(path, "w") as file_to_write:
             file_to_write["Measurement 1"].set_metadata(metadata)
@@ -376,19 +354,7 @@ class TestDotthzFile(unittest.TestCase):
 
         # Initialize test data for Dotthz
 
-        metadata = DotthzMetaData(
-            user="Test User",
-            email="test@example.com",
-            orcid="0000-0001-2345-6789",
-            institution="Test Institute",
-            description="Test description",
-            md={"md1": "Thickness (mm)"},
-            version="1.00",
-            mode="Test mode",
-            instrument="Test instrument",
-            time="12:34:56",
-            date="2024-11-08"
-        )
+        metadata = self._create_metadata()
 
         with DotthzFile(path, "w") as file_to_write:
             file_to_write["Measurement 1"].set_metadata(metadata)
@@ -429,19 +395,7 @@ class TestDotthzFile(unittest.TestCase):
 
         # Initialize test data for Dotthz
 
-        metadata = DotthzMetaData(
-            user="Test User",
-            email="test@example.com",
-            orcid="0000-0001-2345-6789",
-            institution="Test Institute",
-            description="Test description",
-            md={"md1": "Thickness (mm)"},
-            version="1.00",
-            mode="Test mode",
-            instrument="Test instrument",
-            time="12:34:56",
-            date="2024-11-08"
-        )
+        metadata = self._create_metadata()
 
         with DotthzFile(path, "w") as file_to_write:
             file_to_write["Measurement 1"].set_metadata(metadata)

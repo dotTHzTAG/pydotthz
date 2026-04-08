@@ -10,7 +10,6 @@ if __name__ == "__main__":
     # save the file
     path1 = Path("test1.thz")
     with DotthzFile(path1, "w") as file:
-        file.create_measurement("Measurement 1")
 
         # create meta-data
         metadata = DotthzMetaData()
@@ -18,6 +17,11 @@ if __name__ == "__main__":
         metadata.version = "1.00"
         metadata.instrument = "Toptica TeraFlash Pro"
         metadata.mode = "THz-TDS/Transmission"
+        info = {
+            "thickness_mm": 0.52,
+        }
+        for key, value in info.items():
+            metadata.add_field(key, value)
 
         file["Measurement 1"].set_metadata(metadata)
 
@@ -29,6 +33,18 @@ if __name__ == "__main__":
     # create and save a second file
     path2 = Path("test2.thz")
     with DotthzFile(path2, "w") as file:
+        metadata = DotthzMetaData()
+        metadata.user = "John Doe"
+        metadata.version = "1.00"
+        metadata.instrument = "Toptica TeraFlash Pro"
+        metadata.mode = "THz-TDS/Transmission"
+        info = {
+            "thickness_mm": 1.25,
+        }
+        for key, value in info.items():
+            metadata.add_field(key, value)
+
+        file["Measurement 1"].set_metadata(metadata)
         file["Measurement 1"]["Sample"] = np.array([time, data]).T
     del file  # optional, not required as the file is already closed
 

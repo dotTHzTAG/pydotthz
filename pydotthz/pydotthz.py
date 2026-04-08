@@ -140,6 +140,8 @@ class DotthzFile:
 
     def __setitem__(self, key, group):
         # group must be an h5py.Group or something copyable
+        if key in self.file:
+            del self.file[key]
         self.file.copy(group, key)
 
     def __iter__(self):
@@ -322,8 +324,8 @@ class DotthzMeasurementWrapper:
 
     def __str__(self):
         if self.group is None:
-            return "DotthzMeasurementWrapper(closed)"
-        return f"DotthzMeasurementWrapper(datasets={list(self.datasets.keys())})"
+            return "DotthzMeasurementWrapper is closed"
+        return f"{list(self.datasets.keys())}"
 
     def __repr__(self):
         return self.__str__()
@@ -341,7 +343,7 @@ class MetadataProxy:
                 self.mapping[attr] = attr
 
     def __str__(self):
-        return f"MetadataProxy({list(self.mapping.keys())})"
+        return f"{list(self.mapping.keys())}"
 
     def __getitem__(self, key):
         return self._sanatize(self.attrs[self.mapping[key]])
@@ -434,7 +436,7 @@ class DatasetProxy:
         self._initialize_mapping()
 
     def __str__(self):
-        return f"DatasetProxy({list(self.keys())})"
+        return f"{list(self.keys())}"
 
     def __iter__(self):
         """Iterate over the dataset keys."""
