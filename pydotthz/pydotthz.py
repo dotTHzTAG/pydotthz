@@ -285,7 +285,7 @@ class DotthzMeasurementWrapper:
         self.group.attrs["user"] = user_info
 
         # Set additional metadata fields (md1, md2, etc.)
-        for i, (key, value) in enumerate(metadata.md.items(), start=1):
+        for i, value in enumerate(metadata.md.values(), start=1):
             self.group.attrs[f"md{i}"] = value
 
         # Optionally, add "mdDescription" to describe which fields are included

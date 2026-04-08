@@ -4,6 +4,8 @@ All notable changes to the `pydotthz` package will be documented in this file.
 
 # Unreleased
 
+* Update md and mdDescription assignment.
+* Updated user_info such that the parameter can still be formed even if any items of orcid, user, email or institution is missing.
 * ...
 
 ## 1.0.0 - 14.5.2025
